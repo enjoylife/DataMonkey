@@ -23,9 +23,6 @@ typedef struct skip_list {
     free_func_t free_func;
 } skip_list;
 
-/* type defintion for the defualt custom functions */
-//inline static void default_free(void *task_data);
-//inline static int default_compare(unsigned int a, unsigned int b);
 
 skip_node *create_skip_node(int level, unsigned int key, void *payload)
 {
@@ -86,6 +83,7 @@ extern int skip_insert(skip_t sl, unsigned int key, void * payload)
     skip_node *x, *update[SKIP_MAX];
 
     check_hard(key, "Invalid Key");
+    check_hard(payload," Empty payload");
 
     x = sl->header;
     for (i = sl->current_level-1; i >= 0; i--) {
@@ -124,33 +122,35 @@ extern int skip_insert(skip_t sl, unsigned int key, void * payload)
         return 1;
     }
 }
-/*
+
 extern void *skip_search(skip_list *sl, unsigned int key)
 {
+    
     int i;
     skip_node *x;
+
+    check_hard(key, "Invalid Key");
+
     x = sl->header;
-    for (i = sl->current_level; i >= 0; i--) {
-        while (sl->compare_func(x->forward[i]->key, key)) {
-            x = x->forward[i];
+    for (i = sl->current_level-1; i >= 0; i--) {
+        while (x->level[i].forward && // not end NULL
+               default_compare(x->level[i].forward->key, key)) {
+            x = x->level[i].forward;
         }
     }
-    x = x->forward[0];
+    // make sure were not nulled
+    x = (x->level[0].forward)? x->level[0].forward: x;
     if (x->key == key) {
+        log_success("Found key");
         return x->payload;
-    }
-
+    } else{
     log_warn("Key search failed");
     return NULL;
+    }
 }
-*/
+
 extern int skip_current_level(skip_t s)
 {
     return s->current_level;
 }
-/******************************************************************************/
-/* Private functions                                                          */
-/******************************************************************************/
-
-
 
