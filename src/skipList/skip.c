@@ -3,19 +3,20 @@
 #include "./dbg.h"
 #include "./skip.h"
 
+// we differ from the original psuedo code in that we index our level first then follow the forward pointer
+// ex instead of node->forward[i], we go node->level[i].forward
 typedef struct skip_node {
-    //TODO: add ML and Distributed algorithm's variables
     unsigned int key;
     void *payload;
     struct skip_level {
         struct skip_node *forward;
-    } level[]; // C99 construct of variable length array as last member
+    } level[]; // C99 construct that variable length array is allowed for last member
 } skip_node;
 
 typedef struct skip_list {
-    //TODO: add graph algorithm's variables
-    int current_level; // Ranges from 0 to (SKIP_MAX -1)
+    int level;                   // Ranges from 0 to (SKIP_MAX -1)
     int length;
+    struct skip_node *finger[SKIP_MAX];  // For O(log k) searches
     struct  skip_node *header;
     free_func_t free_func;
 } skip_list;
@@ -41,11 +42,13 @@ inline static int default_compare(unsigned int a, unsigned int b)
     return a <  b;
 }
 
-int random_level(void) {
+int random_level(void)
+{
     int level = 1;
-    while ((random()&0xFFFF) < (0.25 * 0xFFFF))
+    while ((random() & 0xFFFF) < (0.25 * 0xFFFF)) {
         level += 1;
-    return (level<SKIP_MAX) ? level : SKIP_MAX;
+    }
+    return (level < SKIP_MAX) ? level : SKIP_MAX;
 }
 
 //TODO: Switch to a more robust error handling policy
@@ -63,22 +66,25 @@ extern skip_t skip_init(free_func_t free_func)
     // init our random generator
     srand(time(NULL));
     
-    new_skip->current_level = 1; // following algorithm to the letter
+    new_skip->level = 1; // following algorithm to the letter
     new_skip->length = 0;
     new_skip->header = create_skip_node(SKIP_MAX, 0, NULL);
     
     for (i = 0; i < SKIP_MAX; i++) {
+        new_skip->finger[i] = NULL;
         new_skip->header->level[i].forward =  NULL;
     }
+    
     return new_skip;
 }
 
-extern void skip_destroy(skip_t sl){
-    check_hard(sl,"Invalid pointer to skip list");
-    skip_node * next, *node;
+extern void skip_destroy(skip_t sl)
+{
+    check_hard(sl, "Invalid pointer to skip list");
+    skip_node *next, *node;
     node = sl->header->level[0].forward;
     free(sl->header);
-    while(node){
+    while (node) {
         next = node->level[0].forward;
         sl->free_func(node->payload);
         free(node);
@@ -88,44 +94,46 @@ extern void skip_destroy(skip_t sl){
 }
 
 //TODO: Switch to a more robust error handling policy
-extern int skip_insert(skip_t sl, unsigned int key, void * payload)
+extern int skip_insert(skip_t sl, unsigned int key, void *payload)
 {
     int i, rand_level;
     skip_node *x, *update[SKIP_MAX];
-
+    
     check_hard(sl, "Invalid Skip List");
     check_hard(key, "Invalid Key");
-    check_hard(payload," Empty payload");
-
+    check_hard(payload, " Empty payload");
+    
     x = sl->header;
-    for (i = sl->current_level-1; i >= 0; i--) {
+    for (i = sl->level - 1; i >= 0; i--) {
         while (x->level[i].forward && // not end NULL
-               default_compare(x->level[i].forward->key, key)) {
+                default_compare(x->level[i].forward->key, key)) {
             x = x->level[i].forward;
-         //   log_warn("still in whleLoop");
+            //   log_warn("still in whleLoop");
         }
         update[i] = x;
+        sl->finger[i] = x;
         //log_warn("still in ForLoop");
     }
-
+    
     // make sure were not nulled
-    x = (x->level[0].forward)? x->level[0].forward: x;
+    x = (x->level[0].forward) ? x->level[0].forward : x;
     //TODO: Decide if we should warn, or reject an overwrite,
     log_info(" %u,  %u", x->key, key);
     if (x->key == key) {
         sl->free_func(x->payload);
         x->payload = payload;
-        log_success("Changed key");
+        log_warn("Key overwrite");
         return 2;
     } else {
         rand_level = random_level();
-        if (rand_level > sl->current_level) {
-            for (i = sl->current_level; i < rand_level; i++) {
+        if (rand_level > sl->level) {
+            for (i = sl->level; i < rand_level; i++) {
                 update[i] = sl->header;
+                sl->finger[i] = sl->header;
             }
-            sl->current_level = rand_level;
+            sl->level = rand_level;
         }
-        x = create_skip_node(rand_level,key,payload);
+        x = create_skip_node(rand_level, key, payload);
         for (i = 0 ; i < rand_level; i++) {
             x->level[i].forward = update[i]->level[i].forward;
             update[i]->level[i].forward = x;
@@ -136,78 +144,133 @@ extern int skip_insert(skip_t sl, unsigned int key, void * payload)
     }
 }
 
+extern void *skip_finger_search(skip_list *sl, unsigned int key)
+{
+    int i, lvl;
+    struct skip_node *x;
+    
+    lvl = 1;
+    
+    // finger search
+    if (sl->finger[0] && default_compare(sl->finger[0]->key, key)) {
+        // move forward and find the largest lvl s.t. forward->key < key
+        while (lvl <= sl->level - 1 &&
+                sl->finger[lvl]->level[lvl].forward &&
+                default_compare(sl->finger[lvl]->level[lvl].forward->key, key)) {
+
+            lvl++;
+        }
+        lvl--;
+        x = sl->finger[lvl];
+    } else {
+        // move backward find the smallest lvl s.t. sl->finger[lvl]->key < key
+        while (lvl <= sl->level - 1 && sl->finger[lvl] &&
+                default_compare(key, sl->finger[lvl]->key)) { // delibrate >=
+            lvl++;
+        }
+        if (lvl > sl->level-1) {
+            lvl = sl->level;
+            x = sl->header;
+        } else {
+            x = sl->finger[lvl];
+        }
+    }
+    // normal search
+    for (i = lvl -1 ; i >= 0 ; i--) {
+        while (x->level[i].forward && default_compare(x->level[i].forward->key, key)) {
+
+            x = x->level[i].forward;
+        }
+        sl->finger[i] = x;
+    }
+    // make sure were not nulled
+    x = (x->level[0].forward) ? x->level[0].forward : x;
+    if (x->key == key) {
+        log_success("Found key");
+        return x->payload;
+    } else {
+        log_warn("Key search failed");
+        return NULL;
+    }
+}
+
 extern void *skip_search(skip_list *sl, unsigned int key)
 {
-    
+
     int i;
     skip_node *x;
-
+    
     check_hard(sl, "Invalid Skip List");
     check_hard(key, "Invalid Key");
-
+    
     x = sl->header;
-    for (i = sl->current_level-1; i >= 0; i--) {
+    for (i = sl->level - 1; i >= 0; i--) {
         while (x->level[i].forward && // not end NULL
-               default_compare(x->level[i].forward->key, key)) {
+                default_compare(x->level[i].forward->key, key)) {
             x = x->level[i].forward;
         }
     }
     // make sure were not nulled
-    x = (x->level[0].forward)? x->level[0].forward: x;
+    x = (x->level[0].forward) ? x->level[0].forward : x;
     if (x->key == key) {
         log_success("Found key");
         return x->payload;
-    } else{
-    log_warn("Key search failed");
-    return NULL;
+    } else {
+        log_warn("Key search failed");
+        return NULL;
     }
 }
 
 //TODO: Switch to a more robust error handling policy
-extern  int skip_delete(skip_t sl, unsigned int key){
+extern  int skip_delete(skip_t sl, unsigned int key)
+{
     int i, rand_level;
     skip_node *x, *update[SKIP_MAX];
-
+    
     check_hard(sl, "Invalid Skip List");
     check_hard(key, "Invalid Key");
-
+    
     x = sl->header;
-    for (i = sl->current_level-1; i >= 0; i--) {
+    for (i = sl->level - 1; i >= 0; i--) {
         while (x->level[i].forward && // not end NULL
-               default_compare(x->level[i].forward->key, key)) {
+                default_compare(x->level[i].forward->key, key)) {
             x = x->level[i].forward;
-         //   log_warn("still in whleLoop");
         }
         update[i] = x;
-        //log_warn("still in ForLoop");
+        sl->finger[i] = x;
     }
-
+    
     // make sure were not nulled
-    x = (x->level[0].forward)? x->level[0].forward: x;
+    x = (x->level[0].forward) ? x->level[0].forward : x;
     if (x->key == key) {
-        for(i=0; i < sl->current_level ;i++){
-            if(update[i]->level[i].forward == x){
+        for (i = 0; i < sl->level ; i++) {
+            if (update[i]->level[i].forward == x) {
                 update[i]->level[i].forward = x->level[i].forward;
             }
         }
         sl->free_func(x->payload);
         log_success("MADEIT");
         free(x);
-        while(sl->current_level > 1 &&
-                (sl->header->level[sl->current_level-1].forward ==NULL)){
+        while (sl->level > 1 &&
+                (sl->header->level[sl->level - 1].forward == NULL)) {
             log_info("Where going down a level");
-            sl->current_level--;
+            sl->level--;
         }
         sl->length--;
         return 1;
-    }else {
+    } else {
         return 0;
     }
 }
 
-extern int skip_current_level(skip_t s)
+extern int skip_level(skip_t s)
 {
-    check_hard(s,"Invalid pointer to skip list");
-    return s->current_level;
+    check_hard(s, "Invalid pointer to skip list");
+    return s->level;
+}
+extern int skip_length(skip_t s)
+{
+    check_hard(s, "Invalid pointer to skip list");
+    return s->length;
 }
 
