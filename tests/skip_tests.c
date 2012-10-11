@@ -1,4 +1,3 @@
-#include <assert.h>
 #include "minunit.h"
 #include "../src/skipList/dbg.h"
 #include "../src/skipList/skip.h"
