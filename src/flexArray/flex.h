@@ -2,6 +2,7 @@
 #define _flex_h
 
 
+typedef void (*free_func_t)(void * ptr);
 typedef struct flex_array * flex_t;
 
 
@@ -10,10 +11,11 @@ typedef enum  {
     FAILURE,
     FOUND,
     MISSING
-}data_struct_error;
+}struct_error;
+
 
 extern flex_t flex_init(free_func_t free_func);
+struct_error flex_locate(flex_t * flex, void * user_data, unsigned int index);
 
-
- flex_grow(flex_t * flex, unsigned int growth);
+#endif
 

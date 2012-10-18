@@ -1,5 +1,6 @@
 #include "minunit.h"
 #include "../src/skipList/dbg.h"
+#include "../src/flexArray/flex.h"
 
 #define EPSILON 0.0000001 // for float_check
 

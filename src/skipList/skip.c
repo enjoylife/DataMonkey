@@ -118,11 +118,11 @@ extern int skip_insert(skip_t sl, unsigned int key, void *payload)
     // make sure were not nulled
     x = (x->level[0].forward) ? x->level[0].forward : x;
     //TODO: Decide if we should warn, or reject an overwrite,
-    log_info(" %u,  %u", x->key, key);
+    //log_info(" %u,  %u", x->key, key);
     if (x->key == key) {
         sl->free_func(x->payload);
         x->payload = payload;
-        log_warn("Key overwrite");
+        //log_warn("Key overwrite");
         return 2;
     } else {
         rand_level = random_level();
@@ -139,7 +139,7 @@ extern int skip_insert(skip_t sl, unsigned int key, void *payload)
             x->level[i].forward = update[i]->level[i].forward;
             update[i]->level[i].forward = x;
         }
-        log_success("inserted key %u and data", key);
+        //log_success("inserted key %u and data", key);
         sl->length++;
         return 1;
     }
@@ -187,10 +187,10 @@ extern void *skip_finger_search(skip_list *sl, unsigned int key)
     // make sure were not nulled
     x = (x->level[0].forward) ? x->level[0].forward : x;
     if (x->key == key) {
-        log_success("Found key");
+        //log_success("Found key");
         return x->payload;
     } else {
-        log_warn("Key search failed");
+        //log_warn("Key search failed");
         return NULL;
     }
 }
@@ -214,10 +214,10 @@ extern void *skip_search(skip_list *sl, unsigned int key)
     // make sure were not nulled
     x = (x->level[0].forward) ? x->level[0].forward : x;
     if (x->key == key) {
-        log_success("Found key");
+        //log_success("Found key");
         return x->payload;
     } else {
-        log_warn("Key search failed");
+        //log_warn("Key search failed");
         return NULL;
     }
 }
@@ -250,11 +250,10 @@ extern  int skip_delete(skip_t sl, unsigned int key)
             }
         }
         sl->free_func(x->payload);
-        log_success("MADEIT");
         free(x);
         while (sl->level > 1 &&
                 (sl->header->level[sl->level - 1].forward == NULL)) {
-            log_info("Where going down a level");
+           // log_info("Where going down a level");
             sl->level--;
         }
         sl->length--;
