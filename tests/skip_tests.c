@@ -151,8 +151,8 @@ char * test_search_finger()
         key = (rand() % 200) + 1;
         skip_insert(s, key, hello);
     }
-    debug("NUM is %d",skip_length(s));
-    debug("MADIT");
+    //debug("NUM is %d",skip_length(s));
+    //debug("MADIT");
     num_found = 0;
     void * response = NULL;
     while(num_found< skip_length(s)){
