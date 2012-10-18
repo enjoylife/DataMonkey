@@ -148,7 +148,7 @@ char * test_search_finger()
     skip_t s = skip_init(free);
     while(skip_level(s) < 2){
     hello = malloc(sizeof( int) * 10);
-        key = (rand() % 10) + 1;
+        key = (rand() % 200) + 1;
         skip_insert(s, key, hello);
     }
     debug("NUM is %d",skip_length(s));
@@ -156,7 +156,7 @@ char * test_search_finger()
     num_found = 0;
     void * response = NULL;
     while(num_found< skip_length(s)){
-        key = (rand() % 10) + 1;
+        key = (rand() % 200) + 1;
         response =  skip_finger_search(s, key);
         if(response){
             num_found++;
@@ -178,7 +178,7 @@ char *all_tests()
     mu_run_test(test_delete_node);
     mu_run_test(test_delete_skip_list);
     mu_run_test(test_everything);
-  //  mu_run_test(test_search_finger);
+    mu_run_test(test_search_finger);
 	return NULL;
 }
 
