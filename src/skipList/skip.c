@@ -132,6 +132,7 @@ extern int skip_insert(skip_t sl, unsigned int key, void *payload)
                 sl->finger[i] = sl->header;
             }
             sl->level = rand_level;
+            //log_info("Lvl: %d",sl->level);
         }
         x = create_skip_node(rand_level, key, payload);
         for (i = 0 ; i < rand_level; i++) {
