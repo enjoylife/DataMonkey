@@ -7,15 +7,18 @@ typedef struct flex_array * flex_t;
 
 
 typedef enum  {
-    SUCCES = 0,
+    SUCCESS = 0,
     FAILURE,
     FOUND,
     MISSING
-}struct_error;
+}DSTATUS;
 
 
 extern flex_t flex_init(free_func_t free_func);
-struct_error flex_locate(flex_t * flex, void * user_data, unsigned int index);
+DSTATUS flex_locate(flex_t  flex, void * requested_data, unsigned long int requested_index);
+
+DSTATUS flex_grow(flex_t  flex);
+DSTATUS flex_shrink(flex_t  flex);
 
 #endif
 
