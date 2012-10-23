@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <time.h>
-#include "./dbg.h"
+#include "../dbg.h"
 #include "./skip.h"
 
 // we differ from the original psuedo code in that we index our level first then follow the forward pointer

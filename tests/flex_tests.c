@@ -1,5 +1,6 @@
+#include <math.h>
 #include "minunit.h"
-#include "../src/skipList/dbg.h"
+#include "../src/dbg.h"
 #include "../src/flexArray/flex.h"
 
 #define EPSILON 0.0000001 // for float_check
@@ -21,7 +22,17 @@ void test_free(void * ptr){
 }
 char * test_init()
 {
-    mu_assert(1==1, "Failed to create skip list");
+    flex_t f = flex_init(20);
+    mu_assert(f,"failed to create flex array");
+    return NULL;
+}
+
+char * test_locate()
+{
+    flex_t f = flex_init(1);
+    char * hello = malloc(sizeof(char) * 4);
+    flex_insert(f,hello, 237);
+
     return NULL;
 }
     
@@ -30,6 +41,7 @@ char *all_tests()
 {
 	mu_suite_start();
 	mu_run_test(test_init);
+	mu_run_test(test_locate);
 	return NULL;
 }
 

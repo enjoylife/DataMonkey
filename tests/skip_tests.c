@@ -1,5 +1,5 @@
 #include "minunit.h"
-#include "../src/skipList/dbg.h"
+#include "../src/dbg.h"
 #include "../src/skipList/skip.h"
 
 #define EPSILON 0.0000001 // for float_check
