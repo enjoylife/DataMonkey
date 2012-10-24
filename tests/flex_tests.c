@@ -30,8 +30,8 @@ char * test_init()
 char * test_locate()
 {
     flex_t f = flex_init(1);
-    char * hello = malloc(sizeof(char) * 4);
-    flex_insert(f,hello, 237);
+    data_p hello = malloc(sizeof(data_p));
+    flex_insert(f,hello, 7);
 
     return NULL;
 }

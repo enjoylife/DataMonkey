@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <stdlib.h>
 
 int main(int argc, char *argv[]){
 
@@ -32,7 +32,6 @@ int seq_search(int a[], int reqV, int start, int end){
 /* Binary search
  *
  * Restriction: Sorted array. */
-
 int bin_search(int a[], int reqV, int start, int end){
     int middle;
 
@@ -52,6 +51,14 @@ int bin_search(int a[], int reqV, int start, int end){
  *      Interface, Implementation, client driver.
  */
        
+
+int **init_2d(int rows, int cols){
+    int i;
+    int **matrix = malloc(rows * sizeof(int*));
+    for(i=0; i< rows; i++)
+        matrix[i] = malloc(cols * sizeof(int));
+    return matrix;
+}
 
 
 
