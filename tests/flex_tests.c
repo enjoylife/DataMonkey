@@ -29,9 +29,25 @@ char * test_init()
 
 char * test_locate()
 {
+    int x = 5;
     flex_t f = flex_init(1);
+    data_p hello2 = malloc(sizeof(data_p));
+    int y = 1;
     data_p hello = malloc(sizeof(data_p));
-    flex_insert(f,hello, 7);
+    hello2 = &y;
+    hello = &x;
+    flex_insert(f,hello, 700);
+    flex_locate(f,hello2, 700,FLEXRETRIEVE);
+    log_info("h is %p and %d",hello,*hello);
+    log_info("h2 is %p and %d",hello2,*hello2);
+    mu_assert(*hello2 == *hello, "Failed");
+    data_p a = malloc(sizeof(data_p));
+    data_p b = malloc(sizeof(data_p));
+    a = &y;
+    b = &x;
+    flex_insert(f,a, 40);
+    flex_locate(f,b,40,FLEXRETRIEVE);
+    mu_assert(*a == *b, "FAILD");
 
     return NULL;
 }
