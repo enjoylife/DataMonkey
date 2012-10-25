@@ -13,9 +13,10 @@ typedef enum  {
 }DSTATUS;
 
 typedef enum {
-    FLEXINSERT = 1,
-    FLEXUPDATE = 2,
-    FLEXRETRIEVE = 3
+    FLEXINSERT = 0,
+    FLEXEXPAND,
+    FLEXUPDATE,
+    FLEXRETRIEVE,
 } FLEXACTION;
 
 typedef int *data_p, **index_p;
