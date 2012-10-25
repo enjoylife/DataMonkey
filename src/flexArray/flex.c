@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include <limits.h>
-#include <math.h>
 #include "./flex.h"
 #include "../dbg.h"
 
@@ -26,9 +25,9 @@ inline unsigned extract_continuous_bits(unsigned long value, int start, int end)
  * */
 typedef struct flex_array{
     free_func_t free_func;
-    int index_block_length;
-    int data_block_length;
-    long int num_elements;              // n
+    unsigned int index_block_length;
+    unsigned int data_block_length;
+    unsigned long int num_elements;              // n
     long int num_super_blocks;          // s
     long int num_nonempty_data_blocks; // d
     long int num_empty_data_blocks;    // either 0 or 1 
@@ -39,9 +38,35 @@ typedef struct flex_array{
 } flex_array;
 
 inline void flex_debug_out(flex_t flex){
-    log_info("data  [occup %ld, size %ld]", flex->last_data_occup, flex->last_data_block_length);
-    log_info("super [occup %ld, size %ld]", flex->last_super_occup, flex->last_super_size);
-    log_info("index [occup %ld, size %ld]\n", flex->last_index_occup, flex->last_index_block_length);
+    log_success("Begin flex debug");
+    log_warn("data  [occup %ld, size %ld]", flex->last_data_occup, flex->last_data_block_length);
+    log_warn("super [occup %ld, size %ld]", flex->last_super_occup, flex->last_super_size);
+    log_warn("index [occup %ld, size %ld]\n", flex->last_index_occup, flex->last_index_block_length);
+    log_warn("index length [%d]", flex->index_block_length);
+    log_warn("data length  [%d]", flex->data_block_length);
+    log_warn("super length [%ld]", flex->num_super_blocks);
+    log_success("End flex debug\n");
+}
+
+extern void flex_string_dump(flex_t flex){
+    int i,y;
+    int super_size = 1;
+    int length = 1;
+    log_warn("Starting array element dump");
+    for(i = 0 ; i < flex->index_block_length ;i++){
+        printf("row: %d,length: %d\n", i, length);
+        for(y = 0; y < length;  y++){
+            printf("%d ", flex->index_block[i][y]);
+        }
+        printf("\n");
+        if(super_size % 2){
+        } else {
+                // double the number of elements in a data block
+                length *= 2;
+            }
+        super_size++;
+    }
+    log_success("Finished element dump");
 }
 
 inline static void default_free (void *ptr){
@@ -49,6 +74,7 @@ inline static void default_free (void *ptr){
 }
 
 extern flex_t flex_init(unsigned long int size){
+    size= 0;// temp, just to remove gcc warn
     flex_array *  new_flex;
     index_p  new_index;
 
@@ -57,6 +83,7 @@ extern flex_t flex_init(unsigned long int size){
 
     new_index = malloc(sizeof(index_p)); // single index 
     new_index[0] = malloc(sizeof(data_p));
+    new_index[0][0] =0;
     new_flex->index_block = new_index;
 
     new_flex->data_block_length = 1;
@@ -77,24 +104,13 @@ extern flex_t flex_init(unsigned long int size){
     return new_flex;
 }
 
-inline bool _flex_check_data(flex_t f){
-    if(f->last_data_occup == f->last_data_block_length){
-        return TRUE;
-    }
-    return FALSE;
-}
-inline bool _flex_check_super(flex_t f){
-    if(f->last_super_occup == f->last_super_size){
-       return TRUE;
-    }
-    return FALSE;
-}
 inline bool _flex_check_index(flex_t f){
     if(f->last_index_block_length == f->last_index_occup){
         return TRUE;
     }
     return FALSE;
 }
+
 inline double _flex_index_usage(flex_t f){
     return (double)f->data_block_length / (double)f->index_block_length;
 }
@@ -121,12 +137,10 @@ inline extern DSTATUS flex_shrink(flex_t flex){
             flex->num_super_blocks--;
             // iii.
             if(flex->num_super_blocks % 2){
-                // double the number of elements in a data block
                 flex->last_data_block_length /= 2;
                 log_success("(STEP iii) Halfed the size of a DATAblock\n");
             // ii.
             } else {
-                // double the number of data blocks in a superblock
                 flex->last_super_size /= 2;
                 log_success("(STEP ii) Halfed the size of a SUPERblock\n");
             }
@@ -142,39 +156,35 @@ inline extern DSTATUS flex_shrink(flex_t flex){
 inline extern DSTATUS flex_grow(flex_t  flex){
     //flex_debug_out(flex);
     // 1.
-    if(_flex_check_data(flex)){
+    if(flex->last_data_occup == flex->last_data_block_length){
         // (a)
-        if(_flex_check_super(flex)){
+        if(flex->last_super_occup == flex->last_super_size){
             flex->num_super_blocks++;
             if(flex->num_super_blocks % 2){
                 // double the number of data blocks in a superblock
                 flex->last_super_size *= 2;
-                log_success("(STEP A) Doubled the size of a SUPERblock\n");
+              //  log_success("(STEP A) Doubled the size of a SUPERblock\n");
             } else {
                 // double the number of elements in a data block
                 flex->last_data_block_length *= 2;
-                log_success("(STEP A) Doubled the size of a DATAblock\n");
+             //   log_success("(STEP A) Doubled the size of a DATAblock\n");
             }
             flex->last_super_occup = 0;
-        //}
-
-        // (b) if there are no empty data blocks
-        //if(flex->num_empty_data_blocks>0){
-        //if(_flex_check_data(flex) && flex->num_empty_data_blocks > 0 ){
-            // if index block is full
-            //if(_flex_check_index(flex)){
-                // reallocate the index block to twice its current size
-                flex->last_index_block_length *= 2;
-                flex->index_block = realloc(flex->index_block, sizeof(index_p) * flex->last_index_block_length);
-                log_success("(STEP B) Realloc of INDEXblock\n");
+            // (b) we skip it
+            flex->last_index_block_length *= 2;
+            flex->index_block = realloc(flex->index_block, sizeof(index_p) * flex->last_index_block_length);
+            //log_success("(STEP B) Realloc of INDEXblock\n");
             // allocate a new last data block and point to it from index block
-            data_p  new_data_block = malloc(sizeof(data_p) * flex->last_data_block_length);
+            data_p new_data_block = (data_p) malloc(sizeof(data_p) * flex->last_data_block_length);
+            int i;
+            log_err("MADIT");
+            for(i=0; i < flex->last_data_block_length; i++){
+                new_data_block[i] = 0;
+            }
             flex->index_block_length++;
-            flex->index_block[flex->index_block_length] = new_data_block;
+            flex->index_block[flex->index_block_length-1] = new_data_block;
             flex->last_index_occup++;
-            //}
         }
-
         // (c)
         // increment d and  data blocks occupying last superblock
         flex->num_nonempty_data_blocks++;
@@ -194,7 +204,7 @@ inline extern DSTATUS flex_grow(flex_t  flex){
 inline DSTATUS flex_locate(flex_t flex, data_p requested_data, unsigned long int requested_index, FLEXACTION type){
 
     long int  k, p, r; // Same  as in Paper's pseudocode
-    int e, b,temp;
+    int e, b;
     
     r = requested_index +1 ;
     //k = default_msb(r); 
@@ -203,20 +213,24 @@ inline DSTATUS flex_locate(flex_t flex, data_p requested_data, unsigned long int
     b = extract_continuous_bits(r, (k/2)+1 ,k-1);
     e = extract_continuous_bits(r, 0,CEILING(k,2) ); //ceiling
     p =  (1 << (k)) -1; // account for paper assuming 1 indexed
-    //check_hard(k==7,"K INvalid acutally %ld", k);
-    //check_hard(k/2 == 3,"Fail");
-    //check_hard(CEILING(k,2) == ,"Fail");
-    //check_hard(e==,"E INvalid acutally %ld", e);
-    //check_hard(b==,"B INvalid it's actually %d", b);
-    //check_hard(p==,"P INvalid %ld", p);
+    
+    /*
+    check_hard(k==7,"K INvalid acutally %ld", k);
+    check_hard(k/2 == 3,"Fail");
+    check_hard(CEILING(k,2) == ,"Fail");
+    check_hard(e==,"E INvalid acutally %ld", e);
+    check_hard(b==,"B INvalid it's actually %d", b);
+    check_hard(p==,"P INvalid %ld", p);
+    */
 
-    // if this is correct, then wtf was p for?
-    data_p block = (flex->index_block)[k];
     log_err("index length is %d", flex->index_block_length);
     log_err("K is %ld", k);
     log_err("E is %d", e);
     log_err("B is %d", b);
-    log_err("P is %ld", p);
+    log_err("P is %ld\n", p);
+
+    // if this is correct, then wtf is p and b for?
+    data_p block = (flex->index_block)[k];
     if(type == FLEXRETRIEVE){ 
         *requested_data = block[e];
     }
@@ -235,12 +249,15 @@ extern DSTATUS flex_insert(flex_t flex, data_p user_data, unsigned long int requ
     return SUCCESS;
 }
 
+
+
 // Assumes zero indexed 
 inline unsigned extract_continuous_bits(unsigned long value, int start, int end) {
     unsigned mask = (~0u) >> (CHAR_BIT*sizeof(value) - end - 1);
     return (value & mask) >> start;
 }
 
+// Just to double check myself when using gcc's  __builtin_ctzl
 inline int default_msb(unsigned long int i){
     int r = 0;
     while (i >>= 1)

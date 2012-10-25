@@ -28,5 +28,8 @@ DSTATUS flex_insert(flex_t flex, data_p user_data, unsigned long int requested_i
 DSTATUS flex_grow(flex_t  flex);
 DSTATUS flex_shrink(flex_t  flex);
 
+void flex_string_dump(flex_t flex);
+void flex_debug_out(flex_t flex);
+
 #endif
 
