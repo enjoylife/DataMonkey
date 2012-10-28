@@ -1,7 +1,5 @@
-CFLAGS= -g  -O2 -Wall -Wextra -Isrc -rdynamic -DNDEBUG $(OPTFLAGS) $(LIBS)
-LIBS= -ldl  $(OPTLIBS)
+CFLAGS= -g -O1 -Wall -Wextra -Isrc -rdynamic 
 PREFIX?=/usr/local
-OPTLIBS= 
 
 SOURCES=$(wildcard src/**/*.c src/*.c)
 OBJECTS=$(patsubst %.c,%.o,$(SOURCES))
@@ -9,7 +7,7 @@ OBJECTS=$(patsubst %.c,%.o,$(SOURCES))
 TEST_SRC=$(wildcard tests/*_tests.c)
 TESTS=$(patsubst %.c,%,$(TEST_SRC))
 
-TARGET=build/skipList  # Rename to library !!!!!
+TARGET=build/DataMonkey # Rename to library !!!!!
 SO_TARGET=$(patsubst %.a,%.so,$(TARGET))
 
 # The Target Build

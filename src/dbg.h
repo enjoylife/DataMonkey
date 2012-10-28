@@ -27,7 +27,10 @@
        "[" BOLDGREEN "OK" RESET "]", __FILE__, __LINE__,"", ##__VA_ARGS__)
 
 #define log_info(M, ...) fprintf(stderr,  "%-20s[%s:%d] %s"M "\n",\
-       "[" BOLDWHITE "INFO" RESET "]", __FILE__, __LINE__ ,"", ##__VA_ARGS__)
+       "[" BOLDMAGENTA "INFO" RESET "]", __FILE__, __LINE__ ,"", ##__VA_ARGS__)
+#define log_infob(M, ...) fprintf(stderr,  "%-20s[%s:%d] %s"M "\n",\
+       "[" BOLDCYAN "INFO" RESET "]", __FILE__, __LINE__ ,"", ##__VA_ARGS__)
+
 
 #define log_err(M, ...) fprintf(stderr,  "%-20s[%s:%d] [E: %s] %s"M"\n",\
        "[" BOLDRED "ERROR" RESET "]", __FILE__, __LINE__, clean_errno(),"", ##__VA_ARGS__)
