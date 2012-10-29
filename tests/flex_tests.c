@@ -3,6 +3,7 @@
 #include "minunit.h"
 #include "../src/dbg.h"
 #include "../src/flexArray/flex.h"
+#include "../src/flexArray/flex.c"
 
 #define EPSILON 0.0000001
 
@@ -22,7 +23,6 @@ const char* byte_to_binary( unsigned long int x )
     {
         b[y] = ( ((x & z) == z) ? '1' : '0');
     }
-
     b[y] = 0;
 
     return b;
@@ -50,16 +50,16 @@ char * sanity_check()
     unsigned int data_size = 1, super_count = 0, super_last_count = 0, super_size=1, length = 8;
     long int ** index = malloc(length * sizeof(long int));;
     fflush(stdout);
-    printf("\n");
+    //printf("\n");
     for(x = 0 ; x < length; x++){
         index[x] = malloc(data_size * sizeof(long int));
         for(y = 0; y < data_size; y++){
             index[x][y]=a;
             a++;
-            printf("%ld ", index[x][y]);
+//            printf("%ld ", index[x][y]);
         }
         super_last_count++;
-        printf("\n");
+        //printf("\n");
         if(super_last_count == super_size){
             super_last_count = 0;
             if(super_count%2){
@@ -71,7 +71,7 @@ char * sanity_check()
             }
         }
     }
-    log_success("Finished element dump");
+    //log_success("Finished element dump");
 
     long int get_index(unsigned long int i){
         unsigned long int r,k,b,e,p;
@@ -125,7 +125,7 @@ char * test_data_dum(){
     flex_grow(f);
     flex_grow(f);
     //flex_debug_out(f);
-//    flex_string_dump(f);
+    //flex_string_dump(f);
 
 
     return NULL;
@@ -147,15 +147,15 @@ char * test_locate()
     *x = 5;
     *y = 7;
     flex_t f = flex_init();
-    //flex_insert(f,x, 12);
-    //flex_insert(f,x, 0);
-  //flex_insert(f,y, 7);
-  //flex_insert(f,x, 2);
-  //flex_insert(f,y, 3);
-  //flex_insert(f,x, 10);
-  //flex_insert(f,y, 5);
-  //flex_insert(f,y, 9);
-  //flex_debug_out(f);
+    flex_insert(f,x, 12);
+    flex_insert(f,x, 0);
+    flex_insert(f,y, 7);
+    flex_insert(f,x, 2);
+    flex_insert(f,y, 3);
+    flex_insert(f,x, 10);
+    flex_insert(f,y, 5);
+    flex_insert(f,y, 9);
+    //flex_debug_out(f);
     //flex_string_dump(f);
 
     return NULL;
@@ -165,16 +165,14 @@ char * test_locate()
 char * test_shrink(){
     DSTATUS status;
 
-    fflush(stdout);
-    printf("\n");
+   // fflush(stdout);
+  //printf("\n");
     flex_t f = flex_init();
   status = flex_shrink(f);
   mu_assert(status == FAILURE, "FAIL");
-  flex_debug_out(f);
   flex_grow(f);
   flex_grow(f);
   flex_grow(f);
-  flex_debug_out(f);
   status = flex_shrink(f);
   status = flex_shrink(f);
   status = flex_shrink(f);
@@ -186,11 +184,9 @@ char * test_shrink(){
   status = flex_shrink(f);
   status = flex_shrink(f);
   mu_assert(status == SUCCESS,"FAIL");
-  flex_debug_out(f);
-//    flex_string_dump(f);
+ //   flex_string_dump(f);
     return NULL;
 }
-    
 
 char *all_tests()
 {

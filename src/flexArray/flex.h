@@ -13,30 +13,20 @@ typedef enum  {
     SUCCESS,
     FAILURE,
     FOUND,
-    MISSING
+    MISSING,
+    GREW,
+    SHRANK
 }DSTATUS;
 
-typedef enum {
-    INSERT,
-    CHECKINSERT,
-    EXPAND,
-    SHRINK,
-    UPDATE,
-    RETRIEVE,
-} FLEXACTION;
+typedef int *data_p;
 
-typedef int *data_p, **index_p;
-
+/* Container altering functions.*/
 flex_t flex_init(void);
 DSTATUS flex_destroy(flex_t flex);
-extern DSTATUS flex_index_init(flex_t flex, unsigned long int requested_index);
-DSTATUS flex_locate(flex_t  flex, data_p requested_data, unsigned long int requested_index, FLEXACTION);
+DSTATUS flex_change_free(flex_t flex, free_func_t func);
+
+/* Element manipulation functions.*/
 DSTATUS flex_insert(flex_t flex, data_p user_data, unsigned long int requested_index);
-
-extern DSTATUS flex_grow(flex_t flex);
-DSTATUS flex_shrink(flex_t  flex);
-
-void flex_string_dump(flex_t flex);
-void flex_debug_out(flex_t flex);
+DSTATUS flex_traverse(flex_t flex, void (*action)(void *));
 
 #endif
