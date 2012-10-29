@@ -28,6 +28,7 @@ typedef enum {
 typedef int *data_p, **index_p;
 
 flex_t flex_init(void);
+DSTATUS flex_destroy(flex_t flex);
 extern DSTATUS flex_index_init(flex_t flex, unsigned long int requested_index);
 DSTATUS flex_locate(flex_t  flex, data_p requested_data, unsigned long int requested_index, FLEXACTION);
 DSTATUS flex_insert(flex_t flex, data_p user_data, unsigned long int requested_index);
@@ -39,4 +40,3 @@ void flex_string_dump(flex_t flex);
 void flex_debug_out(flex_t flex);
 
 #endif
-

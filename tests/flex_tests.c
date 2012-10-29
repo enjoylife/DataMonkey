@@ -13,8 +13,6 @@ int float_check(double a, double b)
 {
 	return (a - b) < EPSILON;
 }
-
-
 const char* byte_to_binary( unsigned long int x )
 {
     static char b[sizeof(x)*8+1] = {0};
@@ -30,6 +28,7 @@ const char* byte_to_binary( unsigned long int x )
     return b;
 }
     
+
 void test_free(void * ptr){
     free(ptr);
 }
@@ -48,14 +47,11 @@ char * sanity_check()
 
     unsigned int x,y;
     long int a = 0;
-    unsigned int data_size = 1, super_count = 0, super_last_count = 0, super_size=1, length = 6;
+    unsigned int data_size = 1, super_count = 0, super_last_count = 0, super_size=1, length = 8;
     long int ** index = malloc(length * sizeof(long int));;
+    fflush(stdout);
+    printf("\n");
     for(x = 0 ; x < length; x++){
-        /*
-        printf("\nrow: %d,data_size: %d, super_size: %d," 
-        "super_last_count: %d, super_count: %d\n",
-        x, data_size,super_size,super_last_count, super_count);
-        */
         index[x] = malloc(data_size * sizeof(long int));
         for(y = 0; y < data_size; y++){
             index[x][y]=a;
@@ -86,7 +82,8 @@ char * sanity_check()
       //  log_info("k/2=%ld, Ceil(k,2)=%ld",k/2,CEILING(k,2));
         b = BITSUBSET(r,k-k/2,k);
         e = BITSUBSET(r,0, CEILING(k,2));
-        p = k==0 ? 0 :  (1 << k-1) ; //PEFECT
+        p =  (1 << (k-1)) ; //PEFECT
+        //p = k==0 ? 0 :  (1 << k-1) ; //PEFECT
         //p = (1 << k-1) ; //PEFECT
         //log_info("K: %ld",k);
         //log_info("B: %ld",b);
@@ -113,6 +110,27 @@ char * sanity_check()
     return NULL;
 }
 
+char * test_data_dum(){
+
+    flex_t f = flex_init();
+    flex_grow(f);
+    flex_grow(f);
+    flex_grow(f);
+    flex_grow(f);
+    flex_grow(f);
+    flex_grow(f);
+    flex_grow(f);
+    flex_grow(f);
+    flex_grow(f);
+    flex_grow(f);
+    flex_grow(f);
+    //flex_debug_out(f);
+//    flex_string_dump(f);
+
+
+    return NULL;
+}
+
 char * test_init()
 {
     flex_t f = flex_init();
@@ -129,31 +147,47 @@ char * test_locate()
     *x = 5;
     *y = 7;
     flex_t f = flex_init();
-    //flex_index_init(f, 10);
-    flex_grow(f);
-    flex_grow(f);
-    flex_grow(f);
-    flex_grow(f);
-    flex_grow(f);
-    flex_grow(f);
-    flex_grow(f);
-    flex_grow(f);
-    flex_grow(f);
-    flex_grow(f);
-    flex_grow(f);
-    flex_grow(f);
-    flex_grow(f);
-    flex_grow(f);
-    flex_grow(f);
+    //flex_insert(f,x, 12);
     //flex_insert(f,x, 0);
-    //flex_insert(f,y, 1);
-    //flex_insert(f,x, 2);
-    //flex_insert(f,y, 3);
-    //flex_insert(f,x, 4);
-    flex_debug_out(f);
+  //flex_insert(f,y, 7);
+  //flex_insert(f,x, 2);
+  //flex_insert(f,y, 3);
+  //flex_insert(f,x, 10);
+  //flex_insert(f,y, 5);
+  //flex_insert(f,y, 9);
+  //flex_debug_out(f);
+    //flex_string_dump(f);
+
+    return NULL;
+}
+
+
+char * test_shrink(){
+    DSTATUS status;
+
+    fflush(stdout);
+    printf("\n");
+    flex_t f = flex_init();
+  status = flex_shrink(f);
+  mu_assert(status == FAILURE, "FAIL");
+  flex_debug_out(f);
+  flex_grow(f);
+  flex_grow(f);
+  flex_grow(f);
+  flex_debug_out(f);
+  status = flex_shrink(f);
+  status = flex_shrink(f);
+  status = flex_shrink(f);
+  mu_assert(status == SUCCESS,"FAIL");
+  status = flex_shrink(f);
+  mu_assert(status == FAILURE,"FAIL");
+  flex_grow(f);
+  flex_grow(f);
+  status = flex_shrink(f);
+  status = flex_shrink(f);
+  mu_assert(status == SUCCESS,"FAIL");
+  flex_debug_out(f);
 //    flex_string_dump(f);
-
-
     return NULL;
 }
     
@@ -161,9 +195,11 @@ char * test_locate()
 char *all_tests()
 {
 	mu_suite_start();
-//    mu_run_test(sanity_check);
+    mu_run_test(sanity_check);
 	mu_run_test(test_init);
+    mu_run_test(test_data_dum);
 	mu_run_test(test_locate);
+    mu_run_test(test_shrink);
 	return NULL;
 }
 

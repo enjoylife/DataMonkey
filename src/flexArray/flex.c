@@ -16,6 +16,7 @@ typedef enum { FALSE, TRUE } bool;
 inline void flex_debug_out(flex_t flex);
 inline int default_msb(unsigned long int i);
 inline static void default_free (void *ptr);
+DSTATUS flex_traverse(flex_t flex, void (*action)(void *));
 inline double _flex_index_usage(flex_t f);
 
 char * print_bool(bool x){
@@ -85,6 +86,59 @@ extern flex_t flex_init(void){
     return new_flex;
 }
 
+extern DSTATUS flex_destroy(flex_t flex){
+   // flex_traverse(flex, default_free);
+   free(flex);
+    
+    return SUCCESS;
+}
+extern DSTATUS flex_shrink(flex_t flex){
+    // 1.
+
+    // 2.
+    // B. we skip A //TODO: find out how the fuck to handle this, and even why?
+    if(flex->last_data_occup ==1){
+        if(flex->last_index_occup > 1){
+            flex->last_index_occup--;
+            log_infob("REMOVED from index @ %ld, with array of %ld",flex->last_index_occup,flex->last_data_size);
+            free(flex->index_block[flex->last_index_occup]);
+            flex->usable_data_blocks -= flex->last_data_size;
+        if((flex->last_index_occup/flex->index_length)<= 0.25){
+            flex->index_length /= 2;
+            index_p new_index = realloc(flex->index_block, sizeof(index_p) * flex->index_length);
+            flex->index_block = new_index;
+        }
+        flex->last_super_occup= flex->last_super_occup-1 <= 0 ? 1 : flex->last_super_occup-1;;
+        // C.
+        // D.
+        if(flex->last_super_occup == 1 ){//&& flex->last_index_occup !=1){
+
+            flex->num_super_blocks--;
+            // i.
+            // iii.
+            if(flex->num_super_blocks % 2){
+                flex->last_data_size /= 2;
+                log_success("(STEP iii) Halfed the size of a DATAblock\n");
+            // ii.
+            } else {
+                flex->last_super_size /= 2;
+                log_success("(STEP ii) Halfed the size of a SUPERblock\n");
+            }
+
+            // iv.
+            flex->last_super_occup = flex->last_super_size;
+            flex->last_data_occup = flex->last_data_size;
+        }
+        } else {
+            return FAILURE; // too many calls to shrink
+        }
+        // E.
+    } else{ 
+        //flex->last_data_occup= flex->last_data_occup-1 <= 0 ? 1 : flex->last_data_occup-1;;
+        flex->last_data_occup--;
+    }
+    return SUCCESS;
+}
 extern DSTATUS flex_grow(flex_t  flex){
     if(flex->last_data_occup == flex->last_data_size){
         // (a)
@@ -104,8 +158,8 @@ extern DSTATUS flex_grow(flex_t  flex){
         }
         // (b)
         if(flex->has_empty_data_blocks==FALSE){ // we are full in the 2nd dimension too
-            log_infob("(Step B) FIRST IF");
-            log_warn("index --------[%ld, %ld]", flex->last_index_occup, flex->index_length);
+            //log_infob("(Step B) FIRST IF");
+            //log_warn("index --------[%ld, %ld]", flex->last_index_occup, flex->index_length);
             //if(flex->last_index_occup == flex->index_length){  
                 
             //    log_infob("(Step B) SECOND IF");
@@ -125,7 +179,7 @@ extern DSTATUS flex_grow(flex_t  flex){
                 }
                 flex->usable_data_blocks += flex->last_data_size;
                 flex->index_block[(flex->last_index_occup)] = new_data_block;
-               // log_infob("ADDED to index @ %ld, with array of %ld",flex->last_index_occup,flex->last_data_size);
+                log_infob("ADDED to index @ %ld, with array of %ld",flex->last_index_occup,flex->last_data_size);
                 flex->has_empty_data_blocks = TRUE;
                 flex->last_index_occup++;
             //}
@@ -143,18 +197,18 @@ extern DSTATUS flex_grow(flex_t  flex){
 }
 extern DSTATUS flex_index_init(flex_t flex, unsigned long int requested_index){
     //log_info("Grow Check requested:[%ld], avalible: [%ld]",requested_index, flex->usable_data_blocks);
-    log_info("Check %ld >= %ld",requested_index, (flex->usable_data_blocks - (flex->last_data_size)));
+    //log_info("Check %ld >= %ld",requested_index, (flex->usable_data_blocks - (flex->last_data_size)));
     while(requested_index >= (flex->usable_data_blocks - (flex->last_data_size ))){
-    log_info("Check %ld >= %ld",requested_index, (flex->usable_data_blocks - (flex->last_data_size)));
+    //log_info("Check %ld >= %ld",requested_index, (flex->usable_data_blocks - (flex->last_data_size)));
         flex_grow(flex);
     }
     return SUCCESS;
 }
 extern DSTATUS flex_insert(flex_t flex, data_p user_data, unsigned long int requested_index){
     //log_info("Grow Check requested:[%ld], avalible: [%ld]",requested_index, flex->usable_data_blocks);
-    log_info("Check %ld >= %ld",requested_index, (flex->usable_data_blocks - (flex->last_data_size)));
+    //log_info("Check %ld >= %ld",requested_index, (flex->usable_data_blocks - (flex->last_data_size)));
     while(requested_index >= (flex->usable_data_blocks - (flex->last_data_size ))){
-    log_info("Check %ld >= %ld",requested_index, (flex->usable_data_blocks - (flex->last_data_size)));
+    //log_info("Check %ld >= %ld",requested_index, (flex->usable_data_blocks - (flex->last_data_size)));
         flex_grow(flex);
     }
 
@@ -169,12 +223,12 @@ inline DSTATUS flex_locate(flex_t flex, data_p requested_data, unsigned long int
     k = LEADINGBIT(r);           // -1 taken care in macro
     b = BITSUBSET(r,k-k/2,k);
     e = BITSUBSET(r,0, CEILING(k,2));
-    //p = k==0 ? 0 : ((1 << k)-1) ; 
-    p = k==0 ? 0 :  (1 << (k-1)) ; //PEFECT
+    p = k==0 ? 0 :  (1 << (k-1)) ; // find a way to avoid conditional 
     log_info("trying [%ld,%ld]\n",(p+b),e);
 
     index_p block = flex->index_block;
     switch(type){
+        data_p check;
         case RETRIEVE:
             *requested_data = block[p+b][e];
             break;
@@ -182,6 +236,16 @@ inline DSTATUS flex_locate(flex_t flex, data_p requested_data, unsigned long int
             block[(p+b)][e] = *requested_data;
             flex->num_user_elements_inserted++;
             break;
+        case CHECKINSERT:
+            if(block[p+b][e] != *requested_data){
+                block[(p+b)][e] = *requested_data;
+                flex->num_user_elements_inserted++;
+            } else {
+                return FAILURE;
+            }
+            break;
+       default:
+       break;
     }
     return SUCCESS;
 }
@@ -213,7 +277,7 @@ extern void flex_string_dump(flex_t flex){
     fflush(stdout);
     printf("\n");
     log_warn("Starting array element dump");
-    for(x = 0 ; x < flex->index_length; x++){
+    for(x = 0 ; x < flex->last_index_occup; x++){
         /*
         printf("\nrow: %d,data_size: %d, super_size: %d," 
         "super_last_count: %d, super_count: %d\n",
@@ -237,38 +301,27 @@ extern void flex_string_dump(flex_t flex){
     }
     log_success("Finished element dump");
 }
-inline extern DSTATUS flex_shrink(flex_t flex){
-    // 1.
-    flex->last_data_occup--;
 
-    // 2.
-    // B. we skip A //TODO: find out how the fuck to handle this, and even why?
-    if(flex->last_data_occup <=0){
-        if(_flex_index_usage(flex) < 0.4){
-            flex->index_length /= 2;
-            //TODO: We lose half of our 2d array, we need a way to free them before the realloc
-            flex->index_block = realloc(flex->index_block, sizeof(index_p) * flex->index_length);
+
+DSTATUS flex_traverse(flex_t flex, void (*action)(void *)){
+    unsigned int x,y;
+    unsigned int data_size = 1, super_count = 0, super_last_count = 0, super_size=1;
+    for(x = 0 ; x < flex->last_index_occup; x++){
+        for(y = 0; y < data_size; y++){
+            action(&flex->index_block[x][y]);
         }
-        // C.
-        flex->last_super_occup--;
-        // D.
-        if(flex->last_super_occup <= 0){
-            // i.
-            flex->num_super_blocks--;
-            // iii.
-            if(flex->num_super_blocks % 2){
-                flex->last_data_size /= 2;
-                log_success("(STEP iii) Halfed the size of a DATAblock\n");
-            // ii.
+        super_last_count++;
+        printf("\n");
+        if(super_last_count == super_size){
+            super_last_count = 0;
+            if(super_count%2){
+                super_size *=2;
+                super_count++;
             } else {
-                flex->last_super_size /= 2;
-                log_success("(STEP ii) Halfed the size of a SUPERblock\n");
+                    data_size *= 2;
+                super_count++;
             }
-            // iv.
-            flex->last_super_occup = flex->last_super_size;
         }
-        // E.
-        flex->last_data_occup = flex->last_super_size;
     }
     return SUCCESS;
 }
