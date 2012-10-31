@@ -1,11 +1,6 @@
 #ifndef _flex_h
 #define _flex_h
 
-#define CEILING(x,y) (((x) + (y) - 1) / (y))
-#define LEADINGBIT(r) (sizeof(unsigned long int)*8 - __builtin_clzl(r)-1)
-#define BITLAST(k,n) ((k) & ((1<<(n))-1))
-#define BITSUBSET(k,m,n) BITLAST((k)>>(m),((n)-(m)))
-
 typedef void (*free_func_t)(void * ptr);
 typedef struct flex_array * flex_t;
 
@@ -18,15 +13,16 @@ typedef enum  {
     SHRANK
 }DSTATUS;
 
-typedef int *data_p;
+typedef int data_t;
+typedef int flex_index_t;
 
 /* Container altering functions.*/
-flex_t flex_init(void);
+flex_t flex_init(flex_index_t inital_size);
 DSTATUS flex_destroy(flex_t flex);
-DSTATUS flex_change_free(flex_t flex, free_func_t func);
 
 /* Element manipulation functions.*/
-DSTATUS flex_insert(flex_t flex, data_p user_data, unsigned long int requested_index);
-DSTATUS flex_traverse(flex_t flex, void (*action)(void *));
+DSTATUS flex_insert(flex_t flex, data_t user_data, flex_index_t  requested_index);
+data_t flex_get(flex_t flex, flex_index_t requested_index);
+DSTATUS flex_remove(flex_t flex, 
 
 #endif

@@ -27,7 +27,33 @@ const char* byte_to_binary( unsigned long int x )
 
     return b;
 }
-    
+char *binrep (unsigned int val, char *buff, int sz) {
+    char *pbuff = buff;
+
+    /* Must be able to store one character at least. */
+    if (sz < 1) return NULL;
+
+    /* Special case for zero to ensure some output. */
+    if (val == 0) {
+            *pbuff++ = '0';
+                *pbuff = '\0';
+                    return buff;
+                    }
+
+    /* Work from the end of the buffer back. */
+    pbuff += sz;
+    *pbuff-- = '\0';
+
+    /* For each bit (going backwards) store character. */
+    while (val != 0) {
+            if (sz-- == 0) return NULL;
+                *pbuff-- = ((val & 1) == 1) ? '1' : '0';
+
+                    /* Get next bit. */
+                    val >>= 1;
+                    }
+    return pbuff+1;
+}    
 
 void test_free(void * ptr){
     free(ptr);
@@ -35,99 +61,7 @@ void test_free(void * ptr){
 
 char * sanity_check()
 {
-    // proof of correct ceilling macro
-    mu_assert(CEILING(7,4) == 2, "ceiling fail");
-    // proof of implicit floor
-    mu_assert(7/4  == 1, "floor fail");
-    mu_assert(1/2  == 0, "floor fail");
-    // proof of zero index
-    mu_assert(LEADINGBIT(4) ==  2  ,"FAIL");
-    mu_assert(LEADINGBIT(1) ==  0  ,"FAIL");
-    mu_assert(LEADINGBIT(8) ==  3  ,"FAIL");
-
-    unsigned int x,y;
-    long int a = 0;
-    unsigned int data_size = 1, super_count = 0, super_last_count = 0, super_size=1, length = 8;
-    long int ** index = malloc(length * sizeof(long int));;
-    fflush(stdout);
-    //printf("\n");
-    for(x = 0 ; x < length; x++){
-        index[x] = malloc(data_size * sizeof(long int));
-        for(y = 0; y < data_size; y++){
-            index[x][y]=a;
-            a++;
-//            printf("%ld ", index[x][y]);
-        }
-        super_last_count++;
-        //printf("\n");
-        if(super_last_count == super_size){
-            super_last_count = 0;
-            if(super_count%2){
-                super_size *=2;
-                super_count++;
-            } else {
-                    data_size *= 2;
-                super_count++;
-            }
-        }
-    }
-    //log_success("Finished element dump");
-
-    long int get_index(unsigned long int i){
-        unsigned long int r,k,b,e,p;
-       // log_info("Trying to get %ld", i);
-        r = i + 1;
-     //   log_info("R: %s",byte_to_binary(r));
-        k = LEADINGBIT(r); // no need for minus 1. already zero indexed PERFECT
-      //  log_info("k/2=%ld, Ceil(k,2)=%ld",k/2,CEILING(k,2));
-        b = BITSUBSET(r,k-k/2,k);
-        e = BITSUBSET(r,0, CEILING(k,2));
-        p =  (1 << (k-1)) ; //PEFECT
-        //p = k==0 ? 0 :  (1 << k-1) ; //PEFECT
-        //p = (1 << k-1) ; //PEFECT
-        //log_info("K: %ld",k);
-        //log_info("B: %ld",b);
-        //log_info("E: %ld",e);
-        //log_info("P: %ld super blocks prior",p);
-        //log_info("trying [%ld,%ld]\n",(p+b),e);
-        return index[(p+b)][e];
-    }
-    mu_assert(get_index(0)==0,"Fail");
-    mu_assert(get_index(1)==1,"Fail");
-    mu_assert(get_index(2)==2,"Fail");
-    mu_assert(get_index(3)==3,"Fail");
-    mu_assert(get_index(4)==4,"Fail");
-    mu_assert(get_index(5)==5,"Fail");
-    mu_assert(get_index(6)==6,"Fail");
-    mu_assert(get_index(7)==7,"Fail");
-    mu_assert(get_index(8)==8,"Fail");
-    mu_assert(get_index(9)==9,"Fail");
-    mu_assert(get_index(11)==11,"Fail");
-    mu_assert(get_index(12)==12,"Fail");
-    mu_assert(get_index(13)==13,"Fail");
-    mu_assert(get_index(14)==14,"Fail");
-
-    return NULL;
-}
-
-char * test_data_dum(){
-
-    flex_t f = flex_init();
-    flex_grow(f);
-    flex_grow(f);
-    flex_grow(f);
-    flex_grow(f);
-    flex_grow(f);
-    flex_grow(f);
-    flex_grow(f);
-    flex_grow(f);
-    flex_grow(f);
-    flex_grow(f);
-    flex_grow(f);
-    //flex_debug_out(f);
-    //flex_string_dump(f);
-
-
+    
     return NULL;
 }
 
@@ -140,52 +74,12 @@ char * test_init()
 
 char * test_locate()
 {
-    //fflush(stdout);
-    //printf("\n");
-    data_p x = malloc(sizeof(data_p));
-    data_p y = malloc(sizeof(data_p));
-    *x = 5;
-    *y = 7;
-    flex_t f = flex_init();
-    flex_insert(f,x, 12);
-    flex_insert(f,x, 0);
-    flex_insert(f,y, 7);
-    flex_insert(f,x, 2);
-    flex_insert(f,y, 3);
-    flex_insert(f,x, 10);
-    flex_insert(f,y, 5);
-    flex_insert(f,y, 9);
-    //flex_debug_out(f);
-    //flex_string_dump(f);
-
     return NULL;
 }
 
 
 char * test_shrink(){
-    DSTATUS status;
-
-   // fflush(stdout);
-  //printf("\n");
-    flex_t f = flex_init();
-  status = flex_shrink(f);
-  mu_assert(status == FAILURE, "FAIL");
-  flex_grow(f);
-  flex_grow(f);
-  flex_grow(f);
-  status = flex_shrink(f);
-  status = flex_shrink(f);
-  status = flex_shrink(f);
-  mu_assert(status == SUCCESS,"FAIL");
-  status = flex_shrink(f);
-  mu_assert(status == FAILURE,"FAIL");
-  flex_grow(f);
-  flex_grow(f);
-  status = flex_shrink(f);
-  status = flex_shrink(f);
-  mu_assert(status == SUCCESS,"FAIL");
- //   flex_string_dump(f);
-    return NULL;
+   return NULL;
 }
 
 char *all_tests()

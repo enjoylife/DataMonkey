@@ -1,52 +1,27 @@
-#include <stdio.h>
-#include <limits.h>
 #include <stdlib.h>
-#include <sys/time.h>
+#include <limits.h>
 
-/* Returns the number of microseconds since Unix epoch. */
-long long microseconds(void) {
-    struct timeval tv;
-    long long mst;
-    gettimeofday(&tv, NULL);
-    mst = ((long long)tv.tv_sec)*1000000;
-    mst += tv.tv_usec;
-    return mst;
+#define CEILING(x,y) (((x) + (y) - 1) / (y))
+#define LEADINGBIT(r) ((sizeof(unsigned long int)*8) - __builtin_clzl(r))
+#define BITLAST(k,n) ((k) & ((1<<(n))-1))
+#define BITSUBSET(k,m,n) BITLAST((k)>>(m),((n)-(m)))
+
+
+int fakemain(int argc, char *argv[]){
+
+    int lgN, t, N;
+    /* Number of bits required to represent N in binary */
+    for (lgN = 0; N > 0; lgN++, N /=2){ 
+    }
+
+    for(lgN = 0, t = 1; t < N; lgN++, t += t){
+        // emphasize the 2^n <= N < 2^(n+1)
+    }
+
+
+    return 0;
 }
 
-/* Convert number of bytes into a human readable string of the form:
- * 100B, 2G, 100M, 4K, and so forth. */
-void bytesToHuman(char *s, long long n) {
-    double d;
-
-    if (n < 0) {
-        *s = '-';
-        s++;
-        n = -n;
-    }
-    if (n < 1024) {
-        /* Bytes */
-        sprintf(s,"%lluB",n);
-        return;
-    } else if (n < (1024*1024)) {
-        d = (double)n/(1024);
-        sprintf(s,"%.2fK",d);
-    } else if (n < (1024LL*1024*1024)) {
-        d = (double)n/(1024*1024);
-        sprintf(s,"%.2fM",d);
-    } else if (n < (1024LL*1024*1024*1024)) {
-        d = (double)n/(1024LL*1024*1024);
-        sprintf(s,"%.2fG",d);
-    }
-}
-inline int default_msb(unsigned long int i){
-    /* Just to double check myself when using gcc's  __builtin_ctzl */
-    int r = 0;
-    while (i >>= 1)
-    {
-      r++;
-    }
-    return r;
-}
 
 /* Sequntial search 
  *
@@ -111,3 +86,5 @@ const char* byte_to_binary( unsigned long int x ){
     return b;
 }
  
+
+
