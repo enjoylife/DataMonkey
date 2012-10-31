@@ -14,46 +14,6 @@ int float_check(double a, double b)
 {
 	return (a - b) < EPSILON;
 }
-const char* byte_to_binary( unsigned long int x )
-{
-    static char b[sizeof(x)*8+1] = {0};
-    int y;
-    long long z;
-    for (z=(1LL<<sizeof(x)*8)-1,y=0; z>0; z>>=1,y++)
-    {
-        b[y] = ( ((x & z) == z) ? '1' : '0');
-    }
-    b[y] = 0;
-
-    return b;
-}
-char *binrep (unsigned int val, char *buff, int sz) {
-    char *pbuff = buff;
-
-    /* Must be able to store one character at least. */
-    if (sz < 1) return NULL;
-
-    /* Special case for zero to ensure some output. */
-    if (val == 0) {
-            *pbuff++ = '0';
-                *pbuff = '\0';
-                    return buff;
-                    }
-
-    /* Work from the end of the buffer back. */
-    pbuff += sz;
-    *pbuff-- = '\0';
-
-    /* For each bit (going backwards) store character. */
-    while (val != 0) {
-            if (sz-- == 0) return NULL;
-                *pbuff-- = ((val & 1) == 1) ? '1' : '0';
-
-                    /* Get next bit. */
-                    val >>= 1;
-                    }
-    return pbuff+1;
-}    
 
 void test_free(void * ptr){
     free(ptr);
@@ -67,13 +27,41 @@ char * sanity_check()
 
 char * test_init()
 {
-    flex_t f = flex_init();
+    flex_t f = flex_init(10);
     mu_assert(f,"failed to create flex array");
+    mu_assert(f->array,"FAiled to create array");
+    flex_destroy(f);
+    return NULL;
+}
+
+char * test_stuff()
+{
+    DSTATUS s;
+    flex_t f = flex_init(9);
+    mu_assert(f->index_length == 8,"Wrong index length");
+    s = flex_insert(f,0,434,DEF);
+    mu_assert(s==SUCCESS,"fail return value");
+    mu_assert(f->array[0] == 434,"failure in data value");
+    s = flex_insert(f,8,1337,DEF);
+    mu_assert(s==SUCCESS,"fail return value");
+    mu_assert(f->array[8] == 1337,"failure in data value");
+    mu_assert(f->index_length == 8,"Wrong index length");
+    s = flex_insert(f,13,1337,DEF);
+    mu_assert(s==SUCCESS,"fail return value");
+    mu_assert(f->array[13] == 1337,"failure in data value");
+    s = flex_insert(f,10,1337,DEF);
+    s = flex_insert(f,10000,1337,DEF);
+
+
+    mu_assert(f,"failed to create flex array");
+    flex_destroy(f);
     return NULL;
 }
 
 char * test_locate()
 {
+    flex_t f = flex_init(51);
+    DSTATUS s = flex_
     return NULL;
 }
 
@@ -87,7 +75,7 @@ char *all_tests()
 	mu_suite_start();
     mu_run_test(sanity_check);
 	mu_run_test(test_init);
-    mu_run_test(test_data_dum);
+    mu_run_test(test_stuff);
 	mu_run_test(test_locate);
     mu_run_test(test_shrink);
 	return NULL;
