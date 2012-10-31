@@ -1,5 +1,4 @@
 CFLAGS= -g -O1 -Wall -Wextra -Isrc -rdynamic 
-PREFIX?=/usr/local
 
 SOURCES=$(wildcard src/**/*.c src/*.c)
 OBJECTS=$(patsubst %.c,%.o,$(SOURCES))
@@ -7,7 +6,7 @@ OBJECTS=$(patsubst %.c,%.o,$(SOURCES))
 TEST_SRC=$(wildcard tests/*_tests.c)
 TESTS=$(patsubst %.c,%,$(TEST_SRC))
 
-TARGET=build/DataMonkey # Rename to library !!!!!
+TARGET=build/DataMonkey # 
 SO_TARGET=$(patsubst %.a,%.so,$(TARGET))
 
 # The Target Build
@@ -41,11 +40,6 @@ clean:
 	rm -f tests/tests.log 
 	find . -name "*.gc*" -exec rm {} \;
 	rm -rf `find . -name "*.dSYM" -print`
-
-# The Install
-install: all
-	install -d $(DESTDIR)/$(PREFIX)/lib/
-	install $(SO_TARGET) $(DESTDIR)/$(PREFIX)/lib/
 
 # The Checker
 check:

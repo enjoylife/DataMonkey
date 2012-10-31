@@ -55,25 +55,27 @@ char * test_stuff()
 
     mu_assert(f,"failed to create flex array");
     flex_destroy(f);
-    return NULL;
+    return 0;
 }
 
 char * test_locate()
 {
     flex_t f = flex_init(51);
-    DSTATUS s = flex_
-    return NULL;
+    flex_insert(f, 30, 30,DEF);
+    flex_insert(f, 10, 10,DEF);
+    flex_insert(f, 20, 20,DEF);
+    flex_insert(f, 50, 20,DEF);
+    return 0;
 }
 
-
 char * test_shrink(){
-   return NULL;
+   return 0;
 }
 
 char *all_tests()
 {
 	mu_suite_start();
-    mu_run_test(sanity_check);
+//    mu_run_test(sanity_check);
 	mu_run_test(test_init);
     mu_run_test(test_stuff);
 	mu_run_test(test_locate);

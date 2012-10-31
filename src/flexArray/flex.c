@@ -14,19 +14,7 @@
 #define CEILING(x,y) (((x) + (y) - 1) / (y))
 #define LEADINGBIT(r) ((sizeof(index_t)*8) - __builtin_clzl(r))
 
-const char* byte_to_binary( index_t x ){
-    static char b[sizeof(x)*8+1] = {0};
-    int y;
-    long long z;
-    for (z=1LL<<sizeof(x)*8-1,y=0; z>0; z>>=1,y++)
-    {
-        b[y] = ( ((x & z) == z) ? '1' : '0');
-    }
 
-    b[y] = 0;
-
-    return b;
-}
 typedef enum { FALSE, TRUE } bool;
 
 /* Private api */
@@ -39,6 +27,7 @@ void flex_debug_out(flex_t flex);
 inline static void default_free (data_t ptr);
 inline static int default_cmp(data_t a, data_t b);
 char * print_bool(bool x){ return x ? "True": "False"; }
+const char* byte_to_binary( index_t x );
 
 /* Our type which holds the array */
 typedef data_t* index_p;
@@ -171,7 +160,7 @@ error:
 DSTATUS flex_grow(flex_t flex){
     index_p new_array;
 
-    index_t new_size = (index_t)LEADINGBIT(flex->index_length + (flex->index_length*flex->change_rate));
+    index_t new_size = flex->index_length + (flex->index_length*flex->change_rate);
     log_infob("diff:[%ld], new[%ld]",new_size - flex->index_length, new_size);
     new_array = realloc(flex->array, sizeof(data_t)*new_size);
     check(new_array,"Failed to grow");
@@ -209,4 +198,17 @@ inline void flex_debug_out(flex_t flex){
     log_warn("Last index -------[%ld]",(long int) flex->last_index);
     log_warn("Change rate ------[%f]", flex->change_rate);
     log_warn("-----END DEBUG----------");
+}
+const char* byte_to_binary( index_t x ){
+    static char b[sizeof(x)*8+1] = {0};
+    int y;
+    long long z;
+    for (z=1LL<<sizeof(x)*8-1,y=0; z>0; z>>=1,y++)
+    {
+        b[y] = ( ((x & z) == z) ? '1' : '0');
+    }
+
+    b[y] = 0;
+
+    return b;
 }
