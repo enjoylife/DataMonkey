@@ -1,4 +1,7 @@
 CFLAGS= -g -O1 -Wall -Wextra -Isrc -rdynamic 
+PREFIX?=/usr/local
+CC=gcc
+SKIPDIR=src/
 
 SOURCES=$(wildcard src/**/*.c src/*.c)
 OBJECTS=$(patsubst %.c,%.o,$(SOURCES))
@@ -11,6 +14,20 @@ SO_TARGET=$(patsubst %.a,%.so,$(TARGET))
 
 # The Target Build
 all: $(SO_TARGET) tests
+
+COMMONDIR=src
+COMMON= $(patsubst %.c, %.o, $(wildcard COMMONDIR/*.c))
+
+FLEXDIR=src/flexArray
+FLEXOBJS=$(patsubst %.c, %.o, $(wildcard $(FLEXDIR)/*.c)) $(COMMON)
+flex: $(FLEXOBJS)
+	$(CC) -c $@  $^
+
+flextest: $(patsubst %.c, %.o, $(wildcard FLEXDIR/tests/*.c)) $(FLEXOBJS) $(COMMON)
+	$(CC) -o $@  $^
+	sh ./tests/teststruct.sh $(FLEXDIR)/tests/*
+
+
 
 
 $(SO_TARGET): CFLAGS += -fPIC

@@ -36,6 +36,7 @@
        "[" BOLDRED "ERROR" RESET "]", __FILE__, __LINE__, clean_errno(),"", ##__VA_ARGS__)
 
 #define check(A, M, ...) if(!(A)) { log_err(M, ##__VA_ARGS__); errno=0; goto error; }
+#define check_prop(A) if(!(A)) {goto error;}
 
 #define check_hard(A, M, ...) if(!(A)) { log_err(M, ##__VA_ARGS__); errno=0; exit(1); }
 
