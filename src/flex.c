@@ -6,9 +6,13 @@
 /* Internal extra helper headers */
 inline int default_msb(index_t i);
 inline static void default_free (data_p ptr);
-char * print_bool(bool x){ return x ? "True": "False"; }
 
-flex_t flex_init(void){
+/* Call to create our flexible array datastructure.
+ * [params] none
+ * [return] {flex_t} our newly initalized array, or NULL in the event of failure.
+ */
+flex_t flex_init(void)
+{
 
     flex_array * new_flex = malloc(sizeof(*new_flex)); 
     index_p new_index = malloc(sizeof(index_p)); 
@@ -32,15 +36,41 @@ flex_t flex_init(void){
 error:
     return NULL;
 }
-DSTATUS flex_traverse(flex_t flex, void (*action)(data_p)){
+
+/* Removes all internal memory associated and the array itself.
+ * [params] {flex} a non null flex array
+ * [return] {SUCCESS} on a good destory, FAILURE otherwise.
+ */
+DSTATUS flex_destroy(flex_t flex)
+{
+    check(flex,"Was given uninitialized flex");
+    index_t x;
+    for(x = 0 ; x <= flex->last_index_occup; x++){
+        free(flex->index_block[x]);
+    }
+    free(flex->index_block);
+    free(flex);
+    return SUCCESS;
+error:
+    return FAILURE;
+}
+
+/* Applies the action across all the contained elements.
+ * [params] {flex} nonvoid flex array to work with.
+ *          {action} a function with the correct typedef.
+ * [return] {SUCCESS} if on every call to action a return of SUCCESS was found.
+ *          {FAILURE} on the first occurance of a returned FAILURE by action .
+ */
+DSTATUS flex_traverse(flex_t flex, DSTATUS (*action)(data_p))
+{
+    DSTATUS status;
     index_t x,y;
     index_t data_size = 1, super_count = 0, super_last_count = 0, super_size=1;
     for(x = 0 ; x <= flex->last_index_occup; x++){
         for(y = 0; y < data_size; y++){
-            //log_infob("MAIDIT");
-            action(&flex->index_block[x][y]);
-        }
-        //printf("\n");
+            status = action(&flex->index_block[x][y]); //log_infob("MAIDIT");
+            check(status == SUCCESS, "Failure at index [%ld,%ld]",x,y); 
+        } //printf("\n");
         super_last_count++;
         if(super_last_count == super_size){
             super_last_count = 0;
@@ -53,22 +83,19 @@ DSTATUS flex_traverse(flex_t flex, void (*action)(data_p)){
             }
         }
     }
-}
-
-DSTATUS flex_destroy(flex_t flex){
-    check(flex,"Was given uninitialized flex");
-    index_t x,y;
-    for(x = 0 ; x <= flex->last_index_occup; x++){
-        free(flex->index_block[x]);
-    }
-    free(flex->index_block);
-    free(flex);
     return SUCCESS;
 error:
     return FAILURE;
 }
 
-DSTATUS flex_change_free(flex_t flex, free_func_t func ){
+/* Change the array's called function when freeing application elements.
+ * [params] {flex} nonvoid flex array to work with.
+ *          {func} function with correct typedef to be called.
+ * [return] {SUCCESS} if change was applied.
+ *          {FAILURE} if otherwise.
+ */
+DSTATUS flex_change_free(flex_t flex, free_func_t func )
+{
     check(flex && func,"Failed to change flex's free function.");
     flex->free_func = func;
     return SUCCESS;
@@ -76,6 +103,11 @@ error:
     return FAILURE;
 }
 
+/* Increases the array's internal counters, and records a plus one to the application element count.
+ * [params] {flex} nonvoid array to work with.
+ * [return] {SUCCESS} if grow was completed.
+ *          {FAILURE} if memory or other error was encountered.
+ */
 DSTATUS flex_grow(flex_t  flex)
 {
     if(flex->num_user_elements_inserted == flex->usable_data_blocks){
@@ -93,12 +125,14 @@ DSTATUS flex_grow(flex_t  flex)
         if(flex->index_length == flex->last_index_occup){
             flex->index_length *= 2;
             index_p new_index_block = realloc((flex->index_block), sizeof(index_p) * flex->index_length);
-            check(new_index_block,"Could not increase the size of a new_block");
+            check(new_index_block,"Could not increase the size of index block from[%ld] to[%ld]",
+                    flex->index_length/2, flex->index_length);
             flex->index_block = new_index_block;
         }
         //log_infob("added new data @ %ld size: %ld",flex->last_index_occup, flex->last_data_size);
         data_p new_data_block = (data_p) malloc(sizeof(data_p) * flex->last_data_size);
-        check(new_data_block,"Could not create a new data_block");
+        check(new_data_block,"Could not create a new data_block of size[%ld], @ index[%ld]",
+                flex->last_data_size, flex->last_index_occup);
         index_t i;
         for(i=0; i < flex->last_data_size; i++){
             new_data_block[i] = 0; // for current debugging only
@@ -114,6 +148,12 @@ DSTATUS flex_grow(flex_t  flex)
 error:
     return FAILURE;
 }
+
+/* Reduces the internal counters to our array, and subtracts one from the count of contained application elements.
+ * [params] {flex} a nonvoid flex array to work with.
+ * [return] {SUCCESS} if shrinking was completed.
+ *          {FAILURE} if array is shrunk to 0 elements, or if  memory error was encountered.
+ */
 DSTATUS flex_shrink(flex_t  flex)
 {
     if(flex->num_user_elements_inserted == 0  )return FAILURE; // bail early
@@ -162,57 +202,35 @@ error:
     return FAILURE;
 }
 
+/* Inserts the application data into the specified index, making sure to grow the array till it fits.
+ * [params] {flex} a nonvoid flex array to work with.
+ *          {requested_index} where to put the data.
+ *          {user_data} the data that will be stored.
+ * [return] {SUCCESS} if inserting and any needed growing were completed.
+ *          {FAILURE} if any needed growing was unable to complete.
+ */
 DSTATUS flex_insert(flex_t flex, index_t requested_index, data_p user_data)
 {
+    DSTATUS status;
     index_t r,k,b,e,p;
     r = requested_index + 1;
-    k = LEADINGBIT(r); // no need for minus 1. already zero indexed PERFECT
+    k = LEADINGBIT(r); // no need for minus 1. already zero indexed 
     b = BITSUBSET(r,k-k/2,k);
     e = BITSUBSET(r,0, CEILING(k,2));
     p = (1 << (k/2 + 1)) - 2 + (k & 1) * (1 << (k/2));
     //log_info("Grow Check P+B:[%ld], index: [%ld]",p+b, flex->index_length);
     //printf("k/2=[%ld], Ceil(k,2)=[%ld]\n",k/2,CEILING(k,2));
-    //printf("K: [%ld] is the leading 1 bit\n",k);
-   // printf("B: [%ld]\n",b);
-    //log_infob("P: [%ld] E: [%ld]",p, e);
-
-
-    // we have an index which would seg fault
-    while(p+b > flex->last_index_occup){
-        flex_grow(flex);
-        //flex_debug_out(flex);
-    }
-    //printf("p+b,e : [%ld,%ld] \n",p+b,e);
+    //printf("K: [%ld] is the leading 1 bit\n",k); // printf("B: [%ld]\n",b);
+    while(p+b > flex->last_index_occup){ // we have an index which would seg fault
+        status = flex_grow(flex);  //flex_debug_out(flex);
+        check_prop(status);    
+    } //printf("p+b,e : [%ld,%ld] \n",p+b,e);
     (flex->index_block[(p+b)][e]) = *user_data;
     return SUCCESS;
+error:
+    return FAILURE;
 }
  
-/*inline DSTATUS flex_locate(flex_t flex, data_p requested_data, index_t requested_index, FLEXACTION type){
-    index_t r,k,b,e,p; // Same  as in Paper's pseudocode
-    r = requested_index +1 ;
-    //k = default_msb(r); 
-    k = LEADINGBIT(r);           // -1 taken care in macro
-    b = BITSUBSET(r,k-k/2,k);
-    e = BITSUBSET(r,0, CEILING(k,2));
-    //p =  (1 << (k-1)) ; //PEFECT
-    //p = (1 << (k/2 + 1)) - 2 + (k & 1) * (1 << (k/2));
-    log_info("trying [%ld,%ld]\n",(p+b),e);
-
-    index_p block = flex->index_block;
-    switch(type){
-        case RETRIEVE:
-            *requested_data = block[p+b][e];
-            break;
-        case INSERT:
-            block[(p+b)][e] = *requested_data;
-            //flex->num_user_elements_inserted++;
-            break;
-       default:
-       break;
-    }
-    return SUCCESS;
-}*/
-
 /* Various Helpers */
 inline static void default_free (data_p ptr){
     log_infob("freeing");

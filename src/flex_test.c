@@ -48,7 +48,7 @@ char * sanity_check()
     }
     //log_success("Finished element dump");
 
-    long int get_index(index_t i){
+    unsigned long int get_index(index_t i){
         index_t r,k,b,e,p;
        // log_info("Trying to get %ld", i);
         r = i + 1;
@@ -87,10 +87,8 @@ char * test_init()
 char * test_destroy_after_growth()
 {
     index_t x;
-    data_p stuff;
     flex_t f = flex_init();
     for(x=0;x<4;x++){
-        //stuff = malloc(sizeof(stuff));
         flex_grow(f);
     }
     flex_destroy(f);
@@ -99,9 +97,10 @@ char * test_destroy_after_growth()
 
 char * test_traverse()
 {
-    void fake_printf(data_p x){
+    DSTATUS fake_printf(data_p x){
         *x = 10;
         //printf("%ld\n",(index_t)*x);
+        return SUCCESS;
     }
     int x;
     flex_t f = flex_init();
@@ -142,7 +141,7 @@ char * test_shrink()
             flex_shrink(f);
             //flex_debug_out(f);
         //log_infob("k= %ld, supersize=%ld, datasize=%ld\n",f->last_index_occup,(1<<((f->last_index_occup)/2)),(1<<(CEILING((f->last_index_occup),2)))); 
-            mu_assert(f->last_data_size == 1<< ((f->num_super_blocks)/2),"Fail");
+            mu_assert(f->last_data_size ==(unsigned) 1<< ((f->num_super_blocks)/2),"Fail");
             //printf("\n");
         }
     mu_assert(prior_num_elems == f->num_user_elements_inserted,"FAIL");
@@ -160,23 +159,19 @@ char * test_shrink()
         return NULL;
 }
 
-char * test_locate()
-{
-
-        return NULL;
-}
-
 char * test_insert()
 {
 
-    void fake_printf(data_p x){
+    DSTATUS fake_printf(data_p x){
         //printf("%ld ",*x);
+        x;
+        return SUCCESS;
     }
     int x;
     data_p stuff = malloc(sizeof(data_p));
     *stuff = 4;
     flex_t f = flex_init();
-    for(x=0;x<40;x++){
+    for(x=0;x<400;x++){
         flex_insert(f,x,stuff);
     }
     flex_traverse(f,&fake_printf);
@@ -186,20 +181,15 @@ char * test_insert()
     return 0;
 }
 
-char * test_grow()
-{
-
-    return 0;
-}
 char * test_grow_size()
 {
     index_t x;
     flex_t f = flex_init();
-    for(x=0;x<13;x++){
+    for(x=0;x<300;x++){
         flex_grow(f);
         //flex_debug_out(f);
         //log_infob("k= %ld, supersize=%ld, datasize=%ld\n",f->num_super_blocks,(1<<((f->num_super_blocks)/2)),(1<<(CEILING((f->num_super_blocks),2)))); 
-        mu_assert(f->last_data_size == (1<< ((f->num_super_blocks)/2)),"Fail");
+        mu_assert(f->last_data_size ==(unsigned) (1<< ((f->num_super_blocks)/2)),"Fail");
     }
     //flex_shrink(f);
     //flex_debug_out(f);
@@ -217,7 +207,6 @@ char *all_tests()
     mu_run_test(test_traverse);
     mu_run_test(test_insert);
     mu_run_test(test_shrink);
-    mu_run_test(test_locate);
 	return NULL;
 }
 

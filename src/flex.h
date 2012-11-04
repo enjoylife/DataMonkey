@@ -14,16 +14,6 @@
 #undef FALSE
 #endif
 
-typedef enum bool { FALSE, TRUE } bool;
-typedef enum FLEXACTION {
-    INSERT,
-    EXPAND,
-    SHRINK,
-    UPDATE,
-    RETRIEVE,
-} FLEXACTION;
-
-
 typedef enum  {
     SUCCESS,
     FAILURE,
@@ -33,14 +23,17 @@ typedef enum  {
     SHRANK
 }DSTATUS;
 
-/* Our type which holds the various sized data_blocks. */
+/* Our application datatype */
 typedef int *data_p;
+
+/* Internal datatypes */
 typedef data_p *index_p;
 typedef unsigned long int index_t;
 
-typedef void (*free_func_t)(data_p);
-typedef struct flex_array * flex_t;
 
+/* Public facing typedef's for our array and it's runtime function's.*/
+typedef struct flex_array * flex_t;
+typedef void (*free_func_t)(data_p);
 
 /* Private per say,use the public functions to edit.*/
 typedef struct flex_array
@@ -58,13 +51,10 @@ typedef struct flex_array
 } flex_array;
 
 /* Private api */
-DSTATUS flex_locate(flex_t  flex, data_p requested_data, index_t requested_index, FLEXACTION);
 DSTATUS flex_grow(flex_t flex);
 DSTATUS flex_shrink(flex_t  flex);
 void flex_string_dump(flex_t flex);
 void flex_debug_out(flex_t flex);
-
-
 
 /* Container altering functions.*/
 extern flex_t flex_init(void);
@@ -73,6 +63,6 @@ extern DSTATUS flex_change_free(flex_t flex, free_func_t func);
 
 /* Element manipulation functions.*/
 extern DSTATUS flex_insert(flex_t flex ,index_t requested_index, data_p user_data);
-extern DSTATUS flex_traverse(flex_t flex, void (*action)(data_p));
+extern DSTATUS flex_traverse(flex_t flex, DSTATUS (*action)(data_p));
 
 #endif
