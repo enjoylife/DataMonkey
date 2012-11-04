@@ -54,6 +54,7 @@ typedef struct flex_array
     index_t last_index_occup;
     index_t last_data_size;  
     index_t last_super_size;
+    index_t last_super_occup;
 } flex_array;
 
 /* Private api */
@@ -71,7 +72,7 @@ extern DSTATUS flex_destroy(flex_t flex);
 extern DSTATUS flex_change_free(flex_t flex, free_func_t func);
 
 /* Element manipulation functions.*/
-extern DSTATUS flex_insert(flex_t flex, data_p user_data, index_t requested_index);
+extern DSTATUS flex_insert(flex_t flex ,index_t requested_index, data_p user_data);
 extern DSTATUS flex_traverse(flex_t flex, void (*action)(data_p));
 
 #endif

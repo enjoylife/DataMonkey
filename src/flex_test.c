@@ -31,10 +31,10 @@ char * sanity_check()
         for(y = 0; y < data_size; y++){
             index[x][y]=a;
             a++;
-        //    printf("%ld ", index[x][y]);
+            printf("%ld ", index[x][y]);
         }
         super_last_count++;
-       // printf("\n");
+        printf("\n");
         if(super_last_count == super_size){
             super_last_count = 0;
             if(super_count%2){
@@ -67,26 +67,9 @@ char * sanity_check()
         //log_info("trying [%ld,%ld]\n",(p+b),e);
         return index[(p+b)][e];
     }
-    mu_assert(get_index(0)==0,"Fail");
-    mu_assert(get_index(1)==1,"Fail");
-    mu_assert(get_index(2)==2,"Fail");
-    mu_assert(get_index(3)==3,"Fail");
-    mu_assert(get_index(4)==4,"Fail");
-    mu_assert(get_index(5)==5,"Fail");
-    mu_assert(get_index(6)==6,"Fail");
-    mu_assert(get_index(7)==7,"Fail");
-    mu_assert(get_index(8)==8,"Fail");
-    mu_assert(get_index(9)==9,"Fail");
-    mu_assert(get_index(11)==11,"Fail");
-    mu_assert(get_index(12)==12,"Fail");
-    mu_assert(get_index(13)==13,"Fail");
-    mu_assert(get_index(14)==14,"Fail");
-    mu_assert(get_index(15)==15,"Fail");
-    mu_assert(get_index(16)==16,"Fail");
-    mu_assert(get_index(17)==17,"Fail");
-    mu_assert(get_index(18)==18,"Fail");
-    mu_assert(get_index(19)==19,"Fail");
-    mu_assert(get_index(20)==20,"Fail");
+    for(x = 0 ; x < length; x++){
+    mu_assert(get_index(x)==x,"Fail");
+    }
 
     return NULL;
 }
@@ -114,23 +97,6 @@ char * test_destroy_after_growth()
     return 0;
 }
 
-char * test_grow_size()
-{
-    index_t x;
-    flex_t f = flex_init();
-    for(x=0;x<4;x++){
-        flex_grow(f);
-        //flex_debug_out(f);
-        //log_infob("k= %ld, supersize=%ld, datasize=%ld\n",f->last_index_occup,(1<<((f->last_index_occup)/2)),(1<<(CEILING((f->last_index_occup),2)))); 
-        mu_assert(f->last_data_size == (1<<(CEILING((f->last_index_occup),2))),"Fail");
-        mu_assert(f->last_super_size == 1<< ((f->last_index_occup)/2),"Fail");
-    }
-    flex_shrink(f);
-    flex_destroy(f);
-    //flex_debug_out(f);
-    return 0;
-}
-
 char * test_traverse()
 {
     void fake_printf(data_p x){
@@ -143,6 +109,7 @@ char * test_traverse()
         flex_grow(f);
     }
     flex_traverse(f,&fake_printf);
+    flex_destroy(f);
 
     return 0;
 }
@@ -157,7 +124,7 @@ char * test_shrink()
     status = flex_shrink(f);
     mu_assert(status == FAILURE, "FAIL");
 
-    index_t  x, max = 50, grow_step=0;
+    index_t  x, max = 500, grow_step=0;
     while(grow_step < max){
     index_t prior_num_elems =  f->num_user_elements_inserted;
     index_t prior_usable =  f->usable_data_blocks;
@@ -175,8 +142,7 @@ char * test_shrink()
             flex_shrink(f);
             //flex_debug_out(f);
         //log_infob("k= %ld, supersize=%ld, datasize=%ld\n",f->last_index_occup,(1<<((f->last_index_occup)/2)),(1<<(CEILING((f->last_index_occup),2)))); 
-            mu_assert(f->last_data_size == (1<<(CEILING((f->last_index_occup),2))),"Fail");
-            mu_assert(f->last_super_size == 1<< ((f->last_index_occup)/2),"Fail");
+            mu_assert(f->last_data_size == 1<< ((f->num_super_blocks)/2),"Fail");
             //printf("\n");
         }
     mu_assert(prior_num_elems == f->num_user_elements_inserted,"FAIL");
@@ -190,39 +156,68 @@ char * test_shrink()
     //log_infob("PASS %d", grow_step);
         grow_step++;
     }
+    flex_destroy(f);
         return NULL;
 }
 
 char * test_locate()
 {
+
         return NULL;
 }
 
-char * test_data_dum(){
-    
-    return NULL;
+char * test_insert()
+{
+
+    void fake_printf(data_p x){
+        //printf("%ld ",*x);
+    }
+    int x;
+    data_p stuff = malloc(sizeof(data_p));
+    *stuff = 4;
+    flex_t f = flex_init();
+    for(x=0;x<40;x++){
+        flex_insert(f,x,stuff);
+    }
+    flex_traverse(f,&fake_printf);
+    //flex_debug_out(f);
+    flex_destroy(f);
+    free(stuff);
+    return 0;
 }
 
-char * test_insert(){
+char * test_grow()
+{
 
-    data_p x = malloc(sizeof(data_p));
-    *x = 4;
+    return 0;
+}
+char * test_grow_size()
+{
+    index_t x;
     flex_t f = flex_init();
+    for(x=0;x<13;x++){
+        flex_grow(f);
+        //flex_debug_out(f);
+        //log_infob("k= %ld, supersize=%ld, datasize=%ld\n",f->num_super_blocks,(1<<((f->num_super_blocks)/2)),(1<<(CEILING((f->num_super_blocks),2)))); 
+        mu_assert(f->last_data_size == (1<< ((f->num_super_blocks)/2)),"Fail");
+    }
+    //flex_shrink(f);
+    //flex_debug_out(f);
+    flex_destroy(f);
     return 0;
 }
 
 char *all_tests()
 {
-	mu_suite_start();
-    mu_run_test(sanity_check);
-	mu_run_test(test_init);
+    mu_suite_start();
+    //mu_run_test(sanity_check);
+    mu_run_test(test_init);
     mu_run_test(test_grow_size);
     mu_run_test(test_destroy_after_growth);
     mu_run_test(test_traverse);
+    mu_run_test(test_insert);
     mu_run_test(test_shrink);
-    //mu_run_test(test_insert);
-//    mu_run_test(test_data_dum);
-//	mu_run_test(test_locate);
+    mu_run_test(test_locate);
 	return NULL;
 }
 
