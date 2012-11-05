@@ -5,7 +5,7 @@
 
 /* Internal extra helper headers */
 inline int default_msb(index_t i);
-inline static void default_free (data_p ptr);
+inline static DSTATUS default_free (data_p ptr);
 
 /* Call to create our flexible array datastructure.
  * [params] none
@@ -37,7 +37,9 @@ error:
     return NULL;
 }
 
-/* Removes all internal memory associated and the array itself.
+/* Removes all internal memory associated with the data structure.
+ * However it does not free the application elements contained within.  
+ * ----------------------------------------------------------------------------------------
  * [params] {flex} a non null flex array
  * [return] {SUCCESS} on a good destory, FAILURE otherwise.
  */
@@ -45,6 +47,24 @@ DSTATUS flex_destroy(flex_t flex)
 {
     check(flex,"Was given uninitialized flex");
     index_t x;
+
+    for(x = 0 ; x <= flex->last_index_occup; x++){
+        free(flex->index_block[x]);
+    }
+    free(flex->index_block);
+    free(flex);
+    return SUCCESS;
+error:
+    return FAILURE;
+}
+DSTATUS flex_nuke(flex_t flex)
+{
+    check(flex,"Was given uninitialized flex");
+    index_t x;
+    DSTATUS status;
+
+    status = flex_traverse(flex,flex->free_func);
+    check_prop(status);
     for(x = 0 ; x <= flex->last_index_occup; x++){
         free(flex->index_block[x]);
     }
@@ -56,6 +76,7 @@ error:
 }
 
 /* Applies the action across all the contained elements.
+ * -----------------------------------------------------
  * [params] {flex} nonvoid flex array to work with.
  *          {action} a function with the correct typedef.
  * [return] {SUCCESS} if on every call to action a return of SUCCESS was found.
@@ -89,6 +110,7 @@ error:
 }
 
 /* Change the array's called function when freeing application elements.
+ * ---------------------------------------------------------------------
  * [params] {flex} nonvoid flex array to work with.
  *          {func} function with correct typedef to be called.
  * [return] {SUCCESS} if change was applied.
@@ -104,6 +126,7 @@ error:
 }
 
 /* Increases the array's internal counters, and records a plus one to the application element count.
+ * ------------------------------------------------------------------------------------------------
  * [params] {flex} nonvoid array to work with.
  * [return] {SUCCESS} if grow was completed.
  *          {FAILURE} if memory or other error was encountered.
@@ -150,6 +173,7 @@ error:
 }
 
 /* Reduces the internal counters to our array, and subtracts one from the count of contained application elements.
+ * ---------------------------------------------------------------------------------------------------------------
  * [params] {flex} a nonvoid flex array to work with.
  * [return] {SUCCESS} if shrinking was completed.
  *          {FAILURE} if array is shrunk to 0 elements, or if  memory error was encountered.
@@ -203,6 +227,7 @@ error:
 }
 
 /* Inserts the application data into the specified index, making sure to grow the array till it fits.
+ * --------------------------------------------------------------------------------------------------
  * [params] {flex} a nonvoid flex array to work with.
  *          {requested_index} where to put the data.
  *          {user_data} the data that will be stored.
@@ -230,11 +255,26 @@ DSTATUS flex_insert(flex_t flex, index_t requested_index, data_p user_data)
 error:
     return FAILURE;
 }
- 
+ DSTATUS flex_delete(flex_t flex, index_t requested_index)
+{
+    DSTATUS status;
+    index_t r,k,b,e,p;
+    r = requested_index + 1;
+    k = LEADINGBIT(r); // no need for minus 1. already zero indexed 
+    b = BITSUBSET(r,k-k/2,k);
+    e = BITSUBSET(r,0, CEILING(k,2));
+    p = (1 << (k/2 + 1)) - 2 + (k & 1) * (1 << (k/2));
+    if(p+b > flex->last_index_occup){ // we have an index which would seg fault
+        return FAILURE;
+    } 
+    flex->index_block[(p+b)][e] = 0;
+    return SUCCESS;
+}
 /* Various Helpers */
-inline static void default_free (data_p ptr){
+inline static DSTATUS default_free (data_p ptr){
     log_infob("freeing");
     free(ptr);
+    return SUCCESS;
 }
 
 inline int default_msb(index_t i){

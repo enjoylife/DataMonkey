@@ -17,10 +17,6 @@
 typedef enum  {
     SUCCESS,
     FAILURE,
-    FOUND,
-    MISSING,
-    GREW,
-    SHRANK
 }DSTATUS;
 
 /* Our application datatype */
@@ -30,10 +26,9 @@ typedef int *data_p;
 typedef data_p *index_p;
 typedef unsigned long int index_t;
 
-
 /* Public facing typedef's for our array and it's runtime function's.*/
 typedef struct flex_array * flex_t;
-typedef void (*free_func_t)(data_p);
+typedef DSTATUS (*free_func_t)(data_p);
 
 /* Private per say,use the public functions to edit.*/
 typedef struct flex_array
@@ -50,19 +45,22 @@ typedef struct flex_array
     index_t last_super_occup;
 } flex_array;
 
+/* Container altering functions.*/
+extern flex_t flex_init(void);
+extern DSTATUS flex_destroy(flex_t flex);
+extern DSTATUS flex_nuke(flex_t flex);
+extern DSTATUS flex_change_free(flex_t flex, free_func_t func);
+
+/* Element manipulation functions.*/
+extern DSTATUS flex_insert(flex_t flex ,index_t requested_index, data_p user_data);
+extern DSTATUS flex_delete(flex_t flex ,index_t requested_index);
+extern DSTATUS flex_traverse(flex_t flex, DSTATUS (*action)(data_p));
+
 /* Private api */
 DSTATUS flex_grow(flex_t flex);
 DSTATUS flex_shrink(flex_t  flex);
 void flex_string_dump(flex_t flex);
 void flex_debug_out(flex_t flex);
 
-/* Container altering functions.*/
-extern flex_t flex_init(void);
-extern DSTATUS flex_destroy(flex_t flex);
-extern DSTATUS flex_change_free(flex_t flex, free_func_t func);
-
-/* Element manipulation functions.*/
-extern DSTATUS flex_insert(flex_t flex ,index_t requested_index, data_p user_data);
-extern DSTATUS flex_traverse(flex_t flex, DSTATUS (*action)(data_p));
 
 #endif
