@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <time.h>
-#include "../dbg.h"
-#include "./skip.h"
+#include "dbg.h"
+#include "skip.h"
 
 // we differ from the original psuedo code in that we index our level first then follow the forward pointer
 // ex instead of node->forward[i], we go node->level[i].forward
