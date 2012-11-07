@@ -67,7 +67,7 @@ DSTATUS flex_nuke(flex_t flex)
     DSTATUS status;
 
     status = flex_traverse(flex,flex->free_func);
-    check_prop(status);
+    check_prop(status == SUCCESS);
     for(x = 0 ; x <= flex->last_index_occup; x++){
         free(flex->index_block[x]);
     }
@@ -119,8 +119,9 @@ DSTATUS flex_insert(flex_t flex, index_t requested_index, data_p user_data)
     //printf("K: [%ld] is the leading 1 bit\n",k); // printf("B: [%ld]\n",b);
     while(p+b > flex->last_index_occup){ // we have an index which would seg fault
         status = flex_grow(flex);  //flex_debug_out(flex);
-        check_prop(status);    
-    } //printf("p+b,e : [%ld,%ld] \n",p+b,e);
+        check_prop(status == SUCCESS);    
+    }
+    //log_info("trying [%ld,%ld]",(p+b),e);
     (flex->index_block[(p+b)][e]) = *user_data;
     return SUCCESS;
 error:
@@ -128,16 +129,18 @@ error:
 }
 
 DSTATUS flex_compare(flex_t flex, index_t requested_index, data_p user_data){
+    log_infob("request: %ld", requested_index);
     index_t r,k,b,e,p;
     r = requested_index + 1;
     k = LEADINGBIT(r); // no need for minus 1. already zero indexed 
     b = BITSUBSET(r,k-k/2,k);
     e = BITSUBSET(r,0, CEILING(k,2));
     p = (1 << (k/2 + 1)) - 2 + (k & 1) * (1 << (k/2));
+    //printf("p+b,e : [%ld,%ld] \n",p+b,e);
     if(p+b > flex->last_index_occup){ // we have an index which would seg fault
         return FAILURE;
     } 
-    return (flex->cmp_func(&flex->index_block[(p+b)][e], user_data));
+    return (flex->cmp_func(&(flex->index_block[(p+b)][e]), user_data));
 }
 
 DSTATUS flex_delete(flex_t flex, index_t requested_index)
@@ -198,6 +201,7 @@ DSTATUS flex_grow(flex_t  flex)
         flex->num_user_elements_inserted++;
         return SUCCESS;
     }
+    return SUCCESS;
 error:
     return FAILURE;
 }
@@ -264,9 +268,10 @@ inline static DSTATUS default_free (data_p ptr){
 }
 
 inline static DSTATUS default_cmp(data_p a, data_p b){
-    if(a ==b) return EQL;
-
-    return NEQL;
+    log_infob("%ld, %ld", *a,*b);
+    if(*a ==*b) return EQL;
+    if(*a < *b) return LT;
+    return GT;
 }
 
 inline int default_msb(index_t i){

@@ -64,7 +64,8 @@ char * sanity_check()
         //log_info("B: %ld",b);
         //log_info("E: %ld",e);
         //log_info("P: %ld super blocks prior",p);
-        //log_info("trying [%ld,%ld]\n",(p+b),e);
+        log_info("trying [%ld,%ld]",(p+b),e);
+        printf("p+b,e : [%ld,%ld] \n",p+b,e);
         return index[(p+b)][e];
     }
     for(x = 0 ; x < length; x++){
@@ -159,28 +160,6 @@ char * test_shrink()
         return NULL;
 }
 
-char * test_insert()
-{
-
-    DSTATUS fake_printf(data_p x){
-        //printf("%ld ",*x);
-        x;
-        return SUCCESS;
-    }
-    int x;
-    data_p stuff = malloc(sizeof(data_p));
-    *stuff = 4;
-    flex_t f = flex_init();
-    for(x=0;x<400;x++){
-        flex_insert(f,x,stuff);
-    }
-    flex_traverse(f,&fake_printf);
-    //flex_debug_out(f);
-    flex_destroy(f);
-    free(stuff);
-    return 0;
-}
-
 char * test_grow_size()
 {
     index_t x;
@@ -197,6 +176,59 @@ char * test_grow_size()
     return 0;
 }
 
+
+
+char * test_insert()
+{
+
+    DSTATUS fake_printf(data_p x){
+        printf("%ld ",*x);
+        x;
+        return SUCCESS;
+    }
+    int x;
+    DSTATUS status;
+    data_p stuff = malloc(sizeof(data_p));
+    *stuff = 4;
+    flex_t f = flex_init();
+    for(x=0;x<40;x++){
+        status = flex_insert(f,x,stuff);
+        mu_assert(status == SUCCESS, "FAIL");
+    }
+    //flex_traverse(f,&fake_printf);
+    //flex_debug_out(f);
+    flex_destroy(f);
+    free(stuff);
+    return 0;
+}
+
+char * test_compare()
+{
+    DSTATUS fake_printf(data_p x){
+        printf("%ld ",*x);
+        x;
+        return SUCCESS;
+    }
+    DSTATUS status;
+    index_t x;
+    data_p stuff = malloc(sizeof(data_p));
+    flex_t f = flex_init();
+    for(x=0;x<10;x++){
+        *stuff = x;
+        flex_insert(f,x,stuff);
+    }
+    for(x=0;x<10;x++){
+        *stuff = x;
+        status = flex_compare(f,x,stuff);
+        mu_assert(status == EQL, "FAIL");
+    }
+
+    //flex_traverse(f, fake_printf);
+    flex_destroy(f);
+    free(stuff);
+    return 0;
+}
+
 char *all_tests()
 {
     mu_suite_start();
@@ -207,6 +239,7 @@ char *all_tests()
     mu_run_test(test_traverse);
     mu_run_test(test_insert);
     mu_run_test(test_shrink);
+    mu_run_test(test_compare);
 	return NULL;
 }
 
