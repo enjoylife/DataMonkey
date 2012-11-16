@@ -24,7 +24,8 @@ typedef enum DSTATUS {
 }DSTATUS;
 
 /* Our application datatype */
-typedef int *data_p;
+typedef int data_t;
+typedef data_t *data_p;
 
 /* Internal datatypes */
 typedef data_p *index_p;
@@ -50,29 +51,30 @@ typedef struct flex_array {
     index_t last_super_occup;
 } flex_array;
 
-/* Container altering functions.*/
 
+inline flex_t flex_init(void);
 /* Call to create our flexible array datastructure.
  * [params] none
  * [return] {flex_t} our newly initalized array, or NULL in the event of failure.
  */
-extern flex_t flex_init(void);
 
+
+inline DSTATUS flex_destroy(flex_t flex);
 /* Removes all internal memory associated with the data structure.
  * However it does not free the application elements contained within.  
  * ----------------------------------------------------------------------------------------
  * [params] {flex} a non null flex array
  * [return] {SUCCESS} on a good destory, FAILURE otherwise.
  */
-extern DSTATUS flex_destroy(flex_t flex);
 
+inline DSTATUS flex_nuke(flex_t flex);
 /* Removes all internal memory associated with the data structure and application data too.
  * ----------------------------------------------------------------------------------------
  * [params] {flex} a non null flex array
  * [return] {SUCCESS} on a good destory, FAILURE otherwise.
  */
-extern DSTATUS flex_nuke(flex_t flex);
 
+inline DSTATUS flex_change_free(flex_t flex, free_func_t func);
 /* Change the array's called function when freeing application elements.
  * ---------------------------------------------------------------------
  * [params] {flex} nonvoid flex array to work with.
@@ -80,8 +82,17 @@ extern DSTATUS flex_nuke(flex_t flex);
  * [return] {SUCCESS} if change was applied.
  *          {FAILURE} if otherwise.
  */
-extern DSTATUS flex_change_free(flex_t flex, free_func_t func);
 
+inline DSTATUS flex_change_cmp(flex_t flex, cmp_func_t func);
+/* Change the array's called function when comparing application elements.
+ * ---------------------------------------------------------------------
+ * [params] {flex} nonvoid flex array to work with.
+ *          {func} function with correct typedef to be called.
+ * [return] {SUCCESS} if change was applied.
+ *          {FAILURE} if otherwise.
+ */
+
+inline DSTATUS flex_insert(flex_t flex ,index_t requested_index, data_p user_data);
 /* Inserts the application data into the specified index, making sure to grow the array till it fits.
  * --------------------------------------------------------------------------------------------------
  * [params] {flex} a nonvoid flex array to work with.
@@ -90,8 +101,8 @@ extern DSTATUS flex_change_free(flex_t flex, free_func_t func);
  * [return] {SUCCESS} if inserting and any needed growing were completed.
  *          {FAILURE} if any needed growing was unable to complete.
  */
-extern DSTATUS flex_insert(flex_t flex ,index_t requested_index, data_p user_data);
 
+inline DSTATUS flex_delete(flex_t flex ,index_t requested_index);
 /* Deletes the application data into the specified index, making sure to shrink the array if nessacary.
  * --------------------------------------------------------------------------------------------------
  * [params] {flex} a nonvoid flex array to work with.
@@ -100,12 +111,21 @@ extern DSTATUS flex_insert(flex_t flex ,index_t requested_index, data_p user_dat
  * [return] {SUCCESS} if inserting and any needed growing were completed.
  *          {FAILURE} if any needed growing was unable to complete.
  */
-extern DSTATUS flex_delete(flex_t flex ,index_t requested_index);
 
+inline data_p flex_get(flex_t flex, index_t requested_index);
+/* Returns the application data at the specified index.
+ * ---------------------------------------------------
+ * [params] {flex} a nonvoid flex array to work with.
+ *          {requested_index} what index to get from.
+ * [return] {data_p} if data was found and within index bounds.
+ *          {NULL} if outside of bound.
+ */
+
+inline DSTATUS flex_compare(flex_t flex, index_t requested_index, data_p user_data);
 /* Compares the data at the index with the element provided.
- * Uses the default compare function if not changed. */
-extern DSTATUS flex_compare(flex_t flex, index_t requested_index, data_p user_data);
-/* [params] {flex} a nonvoid flex array to work with.
+ * Uses the default compare function if not changed. 
+ * ---------------------------------------------------
+ * [params] {flex} a nonvoid flex array to work with.
  *          {requested_index} which data to compare.
  *          {user_data} the data to be compared against.
  * [return] {FAILURE} if index is out of bounds.
@@ -114,22 +134,21 @@ extern DSTATUS flex_compare(flex_t flex, index_t requested_index, data_p user_da
  *          {GT} if contained data is greater then user_data.
  */
 
-
-/* Applies the action across all the contained elements.*/
-extern DSTATUS flex_traverse(flex_t flex, DSTATUS (*action)(data_p));
-/* [params] {flex} nonvoid flex array to work with.
+inline DSTATUS flex_traverse(flex_t flex, DSTATUS (*action)(data_p));
+/* Applies the action across all the contained elements.
+ * ---------------------------------------------------
+ * [params] {flex} nonvoid flex array to work with.
  *          {action} a function with the correct typedef.
  * [return] {SUCCESS} if on every call to action a return of SUCCESS was found.
  *          {FAILURE} on the first occurance of a returned FAILURE by action .
  */
 
-extern DSTATUS flex_sort(flex_t flex);
+inline DSTATUS flex_sort(flex_t flex);
 
 /* Private api */
-DSTATUS flex_grow(flex_t flex);
-DSTATUS flex_shrink(flex_t  flex);
-void flex_string_dump(flex_t flex);
-void flex_debug_out(flex_t flex);
-
+inline DSTATUS flex_grow(flex_t flex);
+inline DSTATUS flex_shrink(flex_t  flex);
+inline void flex_string_dump(flex_t flex);
+inline void flex_debug_out(flex_t flex);
 
 #endif

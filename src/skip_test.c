@@ -1,5 +1,5 @@
 #include "minunit.h"
-#include "dbg.h"
+#include "debug.h"
 #include "skip.h"
 
 #define EPSILON 0.0000001 // for float_check
@@ -82,14 +82,14 @@ char * test_search()
 }
 char * test_delete_node()
 {
-    unsigned int key;
+    unsigned int key = 0;
     int level;
     int length;
     int * hello;
     skip_t s = skip_init(free);
     // wait till we jump to third level
     while(skip_level(s) < 2){
-    hello = malloc(sizeof( int) * 10);
+        hello = malloc(sizeof( int) * 10);
         // give it a large space to avoid hangs
         key = (rand() % 1000) + 1;
         skip_insert(s, key, hello);
@@ -124,7 +124,6 @@ char * test_delete_skip_list(){
 char * test_everything()
 {
     char hello [] = "Hello";
-    char world [] = "World";
     char  * fake_data  = malloc(sizeof(*fake_data)*30);
     
     skip_t s = skip_init(NULL); // default free
@@ -142,7 +141,6 @@ char * test_search_finger()
 {
     unsigned int key;
     int num_found;
-    int level;
     int * hello;
 
     skip_t s = skip_init(free);

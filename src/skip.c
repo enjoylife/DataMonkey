@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <time.h>
-#include "dbg.h"
+#include "debug.h"
 #include "skip.h"
 
 // we differ from the original psuedo code in that we index our level first then follow the forward pointer
@@ -33,7 +33,6 @@ skip_node *create_skip_node(int level, unsigned int key, void *payload)
 
 inline static void default_free (void *ptr)
 {
-    ;
     //free(ptr);
 }
 
@@ -225,7 +224,7 @@ extern void *skip_search(skip_list *sl, unsigned int key)
 //TODO: Switch to a more robust error handling policy
 extern  int skip_delete(skip_t sl, unsigned int key)
 {
-    int i, rand_level;
+    int i;
     skip_node *x, *update[SKIP_MAX];
     
     check_hard(sl, "Invalid Skip List");

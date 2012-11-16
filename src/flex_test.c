@@ -3,7 +3,7 @@
 #include <limits.h>
 #include "minunit.h"
 #include "flex.h"
-#include "dbg.h"
+#include "debug.h"
 
 void test_free(data_p  ptr){
     free(ptr);
@@ -141,7 +141,7 @@ char * test_shrink()
             //flex_debug_out(f);
             flex_shrink(f);
             //flex_debug_out(f);
-        //log_infob("k= %ld, supersize=%ld, datasize=%ld\n",f->last_index_occup,(1<<((f->last_index_occup)/2)),(1<<(CEILING((f->last_index_occup),2)))); 
+        //log_info("k= %ld, supersize=%ld, datasize=%ld\n",f->last_index_occup,(1<<((f->last_index_occup)/2)),(1<<(CEILING((f->last_index_occup),2)))); 
             mu_assert(f->last_data_size ==(unsigned) 1<< ((f->num_super_blocks)/2),"Fail");
             //printf("\n");
         }
@@ -153,7 +153,7 @@ char * test_shrink()
     mu_assert(prior_data_size == f->last_data_size,"fail");
     mu_assert(prior_super_size == f->last_super_size,"fail");
 
-    //log_infob("PASS %d", grow_step);
+    //log_info("PASS %d", grow_step);
         grow_step++;
     }
     flex_destroy(f);
@@ -167,7 +167,7 @@ char * test_grow_size()
     for(x=0;x<300;x++){
         flex_grow(f);
         //flex_debug_out(f);
-        //log_infob("k= %ld, supersize=%ld, datasize=%ld\n",f->num_super_blocks,(1<<((f->num_super_blocks)/2)),(1<<(CEILING((f->num_super_blocks),2)))); 
+        //log_info("k= %ld, supersize=%ld, datasize=%ld\n",f->num_super_blocks,(1<<((f->num_super_blocks)/2)),(1<<(CEILING((f->num_super_blocks),2)))); 
         mu_assert(f->last_data_size ==(unsigned) (1<< ((f->num_super_blocks)/2)),"Fail");
     }
     //flex_shrink(f);
@@ -176,14 +176,11 @@ char * test_grow_size()
     return 0;
 }
 
-
-
 char * test_insert()
 {
 
     DSTATUS fake_printf(data_p x){
-        printf("%ld ",*x);
-        x;
+        printf("%d ",*x);
         return SUCCESS;
     }
     int x;
@@ -205,8 +202,7 @@ char * test_insert()
 char * test_compare()
 {
     DSTATUS fake_printf(data_p x){
-        printf("%ld ",*x);
-        x;
+        printf("%d ",*x);
         return SUCCESS;
     }
     DSTATUS status;

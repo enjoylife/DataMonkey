@@ -2,15 +2,12 @@
 #define _minunit_h
 #include <stdio.h>
 #include <stdlib.h>
+#include "debug.h"
 
-#define RESET   "\033[0m"
-#define BOLDRED     "\033[1m\033[31m"      /* Bold Red */
-#define BOLDGREEN   "\033[1m\033[32m"      /* Bold Green */
-#define BOLDCYAN    "\033[1m\033[36m"      /* Bold Cyan */
 
 #define mu_suite_start() char *message = NULL
 
-#define mu_check(test, message) if (!(test)) { return "Fail"; }
+#define mu_check(test) if (!(test)) { return "Fail"; }
 #define mu_assert(test, message) if (!(test)) { log_err(message); return message; }
 #define mu_run_test(test) printf("\n-----%s", " " #test); message = test(); tests_run++; if (message) return message;
 

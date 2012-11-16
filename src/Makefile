@@ -1,27 +1,37 @@
-CFLAGS= -g -O3 -Wall -Wextra -Isrc -rdynamic 
+CFLAGS= -g -O3 -Wall  -Wextra -Isrc -rdynamic 
 PREFIX?=/usr/local
 CC=gcc
 
 ALLOBJS= $(patsubst %.c, %.o, $(wildcard *.c))
 
+default: test
+
 .PHONY: tests
-test: flextest skiptest $(ALLOBJS)
+test: flextest skiptest dynatest
 	./flextest;
 	./skiptest;
+	./dynatest;
 
 flextest: flex_test.o  flex.o
 	$(CC) $(CFLAGS) -o  $@  $^
 
 flex_test.o: flex_test.c flex.o minunit.h
 	$(CC) $(CFLAGS) -c  $<
-flex.o: flex.c flex.h dbg.h
+flex.o: flex.c flex.h debug.h
 	$(CC) $(CFLAGS) -c  $<
 
 skiptest: skip_test.o  skip.o
 	$(CC) $(CFLAGS) -o  $@  $^
 skip_test.o: skip_test.c skip.o minunit.h
 	$(CC) $(CFLAGS) -c  $<
-skip.o: skip.c skip.h dbg.h
+skip.o: skip.c skip.h debug.h
+	$(CC) $(CFLAGS) -c  $<
+
+dynatest: dyna_test.o dyna.o
+	$(CC) $(CFLAGS) -o  $@  $^
+dyna_test.o: dyna_test.c dyna.o minunit.h
+	$(CC) $(CFLAGS) -c  $<
+dyna.o: dyna.c dyna.h debug.h
 	$(CC) $(CFLAGS) -c  $<
 
 # The Cleaner
