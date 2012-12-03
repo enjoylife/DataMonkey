@@ -29,6 +29,8 @@ char * test_grow(){
 }
 char * test_shrink(){
     dyna_t d = dyna_init(0);
+    mu_check(dyna_shrink(d) == FAILURE);
+    mu_check(dyna_shrink(d) == FAILURE);
     mu_check(dyna_grow(d) == SUCCESS);
     mu_check(dyna_grow(d) == SUCCESS);
     mu_check(dyna_grow(d) == SUCCESS);

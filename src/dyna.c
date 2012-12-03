@@ -88,7 +88,7 @@ extern inline DSTATUS dyna_grow(dyna_t dyna){
     index_p new_array;
     index_t new_size;
     
-     //The growth pattern is:  0, 4, 8, 16, 25, 35, 46, 58, 72, 88, ...
+    //idea taken from python list source
     new_size =  (dyna->index_length >> 3) + (dyna->index_length < 9 ? 3 : 6);
     log_info("diff:[%ld], new[%ld]",(long int)new_size, (long int)new_size + dyna->index_length);
     new_size += dyna->index_length;
@@ -105,8 +105,9 @@ extern inline DSTATUS dyna_shrink(dyna_t dyna){
     index_p new_array;
     index_t new_size = dyna->index_length / 2 ;
     log_info("new size [%ld]",(long int)new_size);
+    check(new_size, "Can't shrink a zero sized array");
     new_array = realloc(dyna->array, sizeof(data_t)*new_size);
-    check(new_array,"Failed to shrink");
+    check(new_array, "Failed to shrink");
     dyna->array = new_array;
     dyna->index_length = new_size;
     return SUCCESS;

@@ -6,10 +6,10 @@ ALLOBJS= $(patsubst %.c, %.o, $(wildcard *.c))
 
 default: test
 
-.PHONY: tests
+.PHONY: test
 test: flextest skiptest dynatest
-	./flextest;
-	./skiptest;
+#	./flextest;
+#	./skiptest;
 	./dynatest;
 
 flextest: flex_test.o  flex.o
